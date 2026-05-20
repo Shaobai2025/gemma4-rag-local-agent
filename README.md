@@ -1,3 +1,41 @@
+# macOS 从零一键部署说明
+
+本版默认加入 Ollama Embedding 模型拉取，默认模型为 embeddinggemma。
+
+## 默认模型
+
+```text
+QA_MODEL=gemma4:e4b
+NOTICE_MODEL=gemma4:e4b
+PAPER_MODEL=gemma4:27b
+EMBEDDING_MODEL=embeddinggemma
+OLLAMA_EMBEDDING_MODEL=embeddinggemma
+```
+
+## 制作发布包
+
+```bash
+chmod +x install_mac_full.sh run_mac.sh doctor_mac.sh make_release_zip_mac_full.sh
+bash make_release_zip_mac_full.sh
+```
+
+## 部署
+
+```bash
+bash install_mac_full.sh
+bash run_mac.sh
+```
+
+## 手动拉取模型
+
+```bash
+ollama pull gemma4:e4b
+ollama pull gemma4:27b
+ollama pull embeddinggemma
+```
+
+如果目标电脑不能拉取 gemma4 或 embeddinggemma，可部署时输入其他模型。
+
 # Gemma 4 Hybrid RAG Dual Model
 
 一个在本地运行的智能问答与写作系统，基于 **FastAPI + Ollama + Chroma + Hybrid Retrieval** 构建，支持：
@@ -18,7 +56,7 @@
 
 - **问答**：Gemma 4 E4B
 - **通知**：Gemma 4 E4B
-- **论文**：Gemma 4 26B
+- **论文**：Gemma 4 27B
 - **Excel 分析**：Gemma 4 E4B
 
 这样做的目的很直接：
@@ -155,7 +193,7 @@ brew services start ollama
 
 ```bash
 ollama pull gemma4:e4b
-ollama pull gemma4:26b
+ollama pull gemma4:27b
 ollama pull embeddinggemma
 ```
 
@@ -262,69 +300,6 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
 ### 3. 为什么来源只显示文件名？
 这是有意做的简化，目的是让前端更干净，不显示冗余 metadata。
-
----
-
-## 发布到 GitHub
-
-### 1. 初始化 Git
-
-在项目目录执行：
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-```
-
-### 2. 在 GitHub 新建仓库
-
-比如仓库名：
-
-```bash
-gemma4-rag-hybrid-dual-model
-```
-
-### 3. 关联远程仓库
-
-把下面的地址替换成你自己的：
-
-```bash
-git remote add origin https://github.com/你的用户名/gemma4-rag-hybrid-dual-model.git
-git branch -M main
-git push -u origin main
-```
-
----
-
-## 建议加一个 .gitignore
-
-推荐内容：
-
-```gitignore
-.venv/
-__pycache__/
-*.pyc
-.env
-data/chroma_db/
-data/state/
-data/docs/
-.DS_Store
-```
-
-如果你的知识库文件不想公开，**不要把 `data/docs/` 推上 GitHub**。
-
----
-
-## 安全提醒
-
-建议不要把以下内容直接提交到 GitHub：
-
-- `.env`
-- 本地知识库原始文件
-- 含隐私的数据表
-- `data/state/` 中的运行状态文件
-- 向量库目录
 
 ---
 
