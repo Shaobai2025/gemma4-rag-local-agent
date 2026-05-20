@@ -1,3 +1,7 @@
+# 基于 Gemma4 的本地化高校学生事务 RAG 智能体系统
+
+## A local RAG-based multi-agent assistant for university student affairs powered by Gemma4, Ollama, FastAPI and LangGraph.
+
 # macOS 从零一键部署说明
 
 本版默认加入 Ollama Embedding 模型拉取，默认模型为 embeddinggemma。
