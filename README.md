@@ -20,18 +20,10 @@ EMBEDDING_MODEL=embeddinggemma
 OLLAMA_EMBEDDING_MODEL=embeddinggemma
 ```
 
-## 制作发布包
-
-```bash
-chmod +x install_mac_full.sh run_mac.sh doctor_mac.sh make_release_zip_mac_full.sh
-bash make_release_zip_mac_full.sh
-```
-
 ## 部署
 
 ```bash
-bash install_mac_full.sh
-bash run_mac.sh
+./install_mac_full.sh
 ```
 
 ## 手动拉取模型
