@@ -2,6 +2,10 @@
 
 ## A local RAG-based multi-agent assistant for university student affairs powered by Gemma4, Ollama, FastAPI and LangGraph.
 
+
+
+
+
 # macOS 从零一键部署说明
 
 本版默认加入 Ollama Embedding 模型拉取，默认模型为 embeddinggemma。
@@ -174,59 +178,6 @@ gemma4-rag-hybrid-dual-model/
 
 - Apple Silicon Mac
 - 48GB 内存及以上体验更好
-
----
-
-## 安装与运行
-
-### 1. 安装 Ollama
-
-如果没有安装：
-
-```bash
-brew install ollama
-```
-
-启动：
-
-```bash
-brew services start ollama
-```
-
-### 2. 拉取模型
-
-```bash
-ollama pull gemma4:e4b
-ollama pull gemma4:27b
-ollama pull embeddinggemma
-```
-
-### 3. 创建虚拟环境
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 4. 安装依赖
-
-```bash
-pip install -U pip
-pip install -r requirements.txt
-```
-
-### 5. 启动项目
-
-```bash
-./start.sh
-```
-
-或者手动启动：
-
-```bash
-source .venv/bin/activate
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
 
 ---
 
