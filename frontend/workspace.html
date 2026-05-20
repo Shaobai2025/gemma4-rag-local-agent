@@ -1,0 +1,2411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus AI Workspace | 智能写作与问答</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    body { background-color:#030712; background-image:linear-gradient(rgba(6,182,212,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,.03) 1px, transparent 1px); background-size:40px 40px; color:#e2e8f0; font-family:'Segoe UI', system-ui, sans-serif; overflow-x:hidden; }
+    .custom-scrollbar::-webkit-scrollbar { width:6px; height:6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background:rgba(2,6,23,.5); border-radius:4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background:#0891b2; border-radius:4px; border:1px solid #164e63; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background:#06b6d4; }
+    .markdown-body { line-height:1.8; color:#cbd5e1; font-size:.95rem; }
+    .markdown-body h1,.markdown-body h2,.markdown-body h3 { font-weight:800; margin:1em 0 .5em; color:#22d3ee; }
+    .markdown-body h1 { font-size:1.5rem; border-bottom:1px solid #164e63; padding-bottom:.4em; }
+    .markdown-body h2 { font-size:1.25rem; }
+    .markdown-body h3 { font-size:1.1rem; }
+    .markdown-body p { margin:.6em 0; }
+    .markdown-body ul,.markdown-body ol { padding-left:1.6rem; margin:.6em 0; }
+    .markdown-body li { margin:.3em 0; }
+    .markdown-body code { background:#082f49; color:#67e8f9; padding:.15rem .4rem; border-radius:.3rem; font-family:monospace; border:1px solid #0c4a6e; }
+    .markdown-body pre { background:#020617; border:1px solid #164e63; padding:1.2rem; border-radius:.75rem; overflow:auto; margin:1em 0; }
+    .markdown-body pre code { background:transparent; padding:0; border:none; color:#e2e8f0; }
+    .markdown-body blockquote { border-left:4px solid #06b6d4; padding:.4rem 0 .4rem 1rem; background:linear-gradient(90deg, rgba(6,182,212,.1) 0%, transparent 100%); color:#94a3b8; margin:1em 0; border-radius:0 .5rem .5rem 0; }
+    .markdown-body table { width:100%; border-collapse:collapse; margin:1em 0; }
+    .markdown-body th,.markdown-body td { border:1px solid #164e63; padding:.6rem .8rem; text-align:left; }
+    .markdown-body th { background:#082f49; color:#22d3ee; font-weight:600; }
+    .typing-cursor { display:inline-block; width:.6ch; animation:blink 1s steps(1) infinite; color:#22d3ee; }
+    @keyframes blink { 50% { opacity:0; } }
+    .source-wrap { display:flex; flex-wrap:wrap; gap:.6rem; }
+    .source-pill { display:inline-flex; align-items:center; padding:.4rem .8rem; border:1px solid #0891b2; border-radius:9999px; background:rgba(8,145,178,.15); font-size:.85rem; color:#cffafe; }
+    .sci-input { background-color:#040d1a; border:1px solid #164e63; color:#ecfeff; transition:all .3s; }
+    .sci-input:focus { border-color:#22d3ee; outline:none; box-shadow:0 0 10px rgba(34,211,238,.3); }
+    select.sci-input option { background-color:#040d1a; color:#ecfeff; }
+    mjx-container svg { fill:#e2e8f0 !important; }
+  </style>
+</head>
+<body class="min-h-screen custom-scrollbar">
+  <div class="max-w-[1600px] mx-auto p-4 md:p-8 relative z-10">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8 relative">
+      <div>
+        <h1 class="text-3xl md:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400">Nexus AI Workspace</h1>
+        <p class="text-cyan-600 mt-2 font-medium tracking-wide">智能写作与问答整合中枢 | 高效协同，数据互联</p>
+      </div>
+      <div class="flex gap-3">
+        <a href="/kb" class="rounded-xl bg-[#0a1220] border border-cyan-600 text-cyan-300 px-6 py-2.5">知识库管理</a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="bg-[#060d1a]/80 rounded-2xl border border-cyan-900/50 p-5"><div class="text-sm text-cyan-700 font-medium">系统服务状态</div><div id="statusService" class="mt-2 text-2xl font-bold text-cyan-100">--</div></div>
+      <div class="bg-[#060d1a]/80 rounded-2xl border border-cyan-900/50 p-5"><div class="text-sm text-cyan-700 font-medium">模型路由</div><div id="statusModel" class="mt-2 text-sm font-semibold text-cyan-300 break-all leading-relaxed">--</div></div>
+      <div class="bg-[#060d1a]/80 rounded-2xl border border-cyan-900/50 p-5"><div class="text-sm text-cyan-700 font-medium">知识库条目解析</div><div id="statusEntries" class="mt-2 text-2xl font-bold text-cyan-100">--</div></div>
+      <div class="bg-[#060d1a]/80 rounded-2xl border border-cyan-900/50 p-5"><div class="text-sm text-cyan-700 font-medium">收录类别 / 文件数</div><div id="statusMeta" class="mt-2 text-2xl font-bold text-cyan-100">--</div></div>
+    </div>
+
+    <div class="bg-[#060d1a]/60 border border-cyan-900/60 rounded-3xl overflow-hidden">
+      <div class="border-b border-cyan-900/50 bg-[#020617]/50 px-6 py-4 flex flex-wrap gap-3" id="tabBar">
+        <button data-tab="qa" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-bold bg-cyan-900 text-cyan-50 border border-cyan-400">核心问答解析</button>
+        <button data-tab="notice" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600">智能通知生成</button>
+        <button data-tab="paper" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600">学术论文起草</button>
+        <button data-tab="talk" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600">谈话记录</button>
+        <button data-tab="profile" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600">学生画像</button>
+        <button data-tab="exam" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600">知识库出题</button>
+        <button data-tab="simulation" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600">谈话模拟训练</button>
+        <button data-tab="excelagent" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600">Excel智能分析</button>
+        <button data-tab="case" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600">个案会商</button>
+        <button data-tab="sandbox" class="tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600">沙盘推演</button>
+      </div>
+
+      <div class="p-6 md:p-8">
+        <section id="tab-qa" class="tab-panel relative">
+          <aside class="fixed top-[20%] right-0 z-50 flex group translate-x-[calc(100%-2.5rem)] hover:translate-x-0 transition-transform duration-500 ease-out">
+            <div class="w-10 h-36 bg-[#040d1a] border border-cyan-600 border-r-0 rounded-l-xl flex items-center justify-center shadow-[-5px_0_15px_rgba(6,182,212,0.4)] cursor-pointer group-hover:bg-cyan-950 transition-colors">
+              <span class="text-cyan-400 text-sm font-bold tracking-widest pointer-events-none" style="writing-mode: vertical-rl;">历史问答</span>
+            </div>
+            <div class="w-80 h-[65vh] bg-[#020617]/95 backdrop-blur-2xl border border-cyan-800 p-5 shadow-[-15px_0_40px_rgba(0,0,0,0.8)] flex flex-col rounded-bl-xl border-r-0">
+              <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-900/50">
+                <h2 class="text-lg font-bold text-cyan-300">最近问答记录</h2>
+                <button id="refreshQaHistoryBtn" class="text-sm text-cyan-600 hover:text-cyan-300 transition-colors">刷新</button>
+              </div>
+              <div id="qaHistoryBox" class="space-y-3 text-sm text-gray-300 overflow-y-auto flex-grow custom-scrollbar pr-2"></div>
+            </div>
+          </aside>
+
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 flex flex-col gap-6 max-h-[75vh] overflow-y-auto custom-scrollbar pr-2">
+              <div class="bg-[#0a1220]/80 rounded-2xl p-5 border border-cyan-900/50">
+                <h2 class="text-lg font-bold text-cyan-100 mb-1 mt-2">知识库联合检索</h2>
+                <span class="text-xs text-cyan-700 block mb-4">Dense + Sparse + RRF 融合路由</span>
+                <label class="block mb-4"><span class="text-sm text-cyan-500 mb-1 block">解析问题</span><textarea id="questionInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：学生离校需如何操作？"></textarea></label>
+                <label class="block mb-4"><span class="text-sm text-cyan-500 mb-1 block">指定知识分类（可选）</span><select id="askCategoryInput" class="sci-input w-full rounded-xl px-3 py-2.5"></select></label>
+                <label class="block mb-4"><span class="text-sm text-cyan-500 mb-1 block">推理模型</span><select id="qaModelSelect" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="auto">自动路由（推荐）</option><option value="gemma4:e4b">gemma4:e4b（更快）</option><option value="gemma4:26b">gemma4:26b（更强）</option></select></label>
+                <div class="flex gap-3"><button id="askBtn" class="flex-1 rounded-xl bg-cyan-700/80 text-white px-4 py-2.5 font-bold border border-cyan-500">执行检索</button><button id="clearBtn" class="rounded-xl border border-cyan-800 px-4 py-2.5 font-medium text-cyan-500">重置</button></div>
+              </div>
+
+              <div class="bg-[#0a1220]/80 rounded-2xl p-5 border border-cyan-900/50">
+                <h3 class="text-lg font-bold text-cyan-100 mb-1 mt-2">数据表格引擎</h3>
+                <span class="text-xs text-cyan-700 block mb-4">Excel / CSV 多维分析</span>
+                <label class="block mb-3"><span class="text-sm text-cyan-500 mb-1 block">挖掘意图</span><textarea id="excelQuestionInput" rows="2" class="sci-input w-full rounded-xl px-4 py-2 custom-scrollbar"></textarea></label>
+                <label class="block mb-3"><span class="text-sm text-cyan-500 mb-1 block">挂载数据文件</span><input id="excelFileInput" type="file" accept=".xlsx,.xls,.csv" class="block w-full text-sm text-cyan-300" /></label>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                  <label class="block"><span class="text-xs text-cyan-600 mb-1 block">定位 Sheet</span><input id="sheetNameInput" class="sci-input w-full rounded-lg px-3 py-2 text-sm" /></label>
+                  <label class="block"><span class="text-xs text-cyan-600 mb-1 block">聚焦列名</span><input id="columnsInput" class="sci-input w-full rounded-lg px-3 py-2 text-sm" /></label>
+                </div>
+                <button id="excelAnalyzeBtn" class="w-full rounded-xl bg-blue-900/60 text-blue-100 px-4 py-2.5 font-bold border border-blue-700 mb-3">透视分析</button>
+                <button id="gradeWarningBtn" class="w-full rounded-xl bg-rose-900/60 text-rose-100 px-4 py-2.5 font-bold border border-rose-700 mb-3">成绩预警分析</button>
+                <div class="flex gap-2"><button id="exportExcelMdBtn" class="flex-1 rounded-lg border border-cyan-800 px-2 py-1.5 text-xs text-cyan-500">导出 MD</button><button id="exportExcelReportBtn" class="flex-1 rounded-lg border border-cyan-800 px-2 py-1.5 text-xs text-cyan-500">归档报告</button></div>
+                <div id="excelStatus" class="text-xs text-cyan-600 mt-3 text-center"></div>
+              </div>
+
+              <div class="bg-[#0a1220]/80 rounded-2xl p-5 border border-cyan-900/50">
+                <h3 class="text-lg font-bold text-cyan-100 mb-1 mt-2">多模态视觉感测</h3>
+                <span class="text-xs text-cyan-700 block mb-4">图像结构与文本提取</span>
+                <label class="block mb-3"><span class="text-sm text-cyan-500 mb-1 block">观测指令</span><textarea id="imageQuestionInput" rows="2" class="sci-input w-full rounded-xl px-4 py-2 custom-scrollbar"></textarea></label>
+                <label class="block mb-4"><span class="text-sm text-cyan-500 mb-1 block">上传全息影像</span><input id="imageFileInput" type="file" accept=".png,.jpg,.jpeg,.webp" class="block w-full text-sm text-cyan-300" /></label>
+                <button id="imageAnalyzeBtn" class="w-full rounded-xl bg-purple-900/60 text-purple-100 px-4 py-2.5 font-bold border border-purple-700">图像解析</button>
+                <div id="imageStatus" class="text-xs text-cyan-600 mt-3 text-center"></div>
+              </div>
+            </section>
+
+            <section class="lg:col-span-3 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-cyan-800/60 flex flex-col flex-grow min-h-[60vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-900/50">
+                  <h2 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">控制台输出核心区</h2>
+                  <span id="askStatus" class="text-sm font-mono text-cyan-500">Waiting for commands...</span>
+                </div>
+                <div class="flex-grow rounded-2xl bg-[#01040a] border border-cyan-900/60 p-6 overflow-y-auto custom-scrollbar">
+                  <div id="answerContent" class="markdown-body"><p class="text-cyan-800 italic">系统就绪，请在左侧发起检索或分析请求...</p></div>
+                </div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60">
+                <h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">数据溯源链 / DataFrame 预览</h2>
+                <div id="sourcesBox" class="space-y-3"><div class="text-sm text-cyan-900 font-mono">No tracing data detected.</div></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tab-notice" class="tab-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 bg-[#0a1220]/80 rounded-2xl p-6 border border-cyan-900/50 max-h-[80vh] overflow-y-auto custom-scrollbar">
+              <h2 class="text-xl font-bold text-cyan-100 mb-5">通信协议合成器</h2>
+              <div class="space-y-4">
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">通信主题</span><input id="topicInput" class="sci-input w-full rounded-xl px-4 py-2.5" /></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">触达对象</span><input id="audienceInput" class="sci-input w-full rounded-xl px-4 py-2.5" /></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">挂载知识库（可选）</span><select id="noticeCategoryInput" class="sci-input w-full rounded-xl px-3 py-2.5"></select></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">生成模型</span><select id="noticeModelSelect" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="auto">自动路由（推荐）</option><option value="gemma4:e4b">gemma4:e4b（更快）</option><option value="gemma4:26b">gemma4:26b（更强）</option></select></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">语态渲染模型</span><select id="styleInput" class="sci-input w-full rounded-xl px-3 py-2.5 text-sm"><option value="formal">正式公文网段</option><option value="group">即时通讯群风</option><option value="reminder">强力督促执行</option><option value="gentle">温和指导说明</option></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">字节长度配额</span><select id="lengthInput" class="sci-input w-full rounded-xl px-3 py-2.5 text-sm"><option value="short">短频快</option><option value="medium" selected>标准量</option><option value="long">冗长详尽</option></select></label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">强约束要点节点注入</span><textarea id="mustIncludeInput" rows="4" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <div class="pt-2 flex flex-col gap-3">
+                  <button id="generateBtn" class="w-full rounded-xl bg-cyan-700/80 text-white px-4 py-3 font-bold border border-cyan-500">执行协议合成</button>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button id="copyBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">存入剪贴板</button>
+                    <button id="exportNoticeMdBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">输出 MD</button>
+                    <button id="exportNoticeDocxBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">输出 DOCX</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="lg:col-span-3 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-cyan-800/60 flex flex-col flex-grow min-h-[50vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-900/50"><h2 class="text-xl font-bold text-cyan-300">生成负载内容</h2><span id="statusText" class="text-sm font-mono text-cyan-600">Standby.</span></div>
+                <div class="rounded-2xl bg-[#01040a] border border-cyan-900/60 p-6 overflow-y-auto custom-scrollbar flex-grow"><div id="noticeContent" class="markdown-body"><p class="text-cyan-800 italic">等待合成指令...</p></div></div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60"><h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">依据参考源碎片</h2><div id="noticeSourcesBox" class="space-y-3"><div class="text-sm text-cyan-900 font-mono">Null.</div></div></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tab-paper" class="tab-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 bg-[#0a1220]/80 rounded-2xl p-6 border border-cyan-900/50 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <h2 class="text-xl font-bold text-cyan-100 mb-5">学术引擎矩阵</h2>
+              <div class="space-y-4">
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">研究锚点</span><input id="paperTopicInput" class="sci-input w-full rounded-xl px-4 py-2.5" /></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">体裁</span><select id="paperTypeInput" class="sci-input w-full rounded-xl px-3 py-2.5 text-sm"><option value="research">核心研究期刊</option><option value="review">领域综述文献</option><option value="report">实验探勘报告</option><option value="thesis">博硕学位论文草稿</option><option value="proposal">课题立项申报书</option></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">切片区域</span><select id="sectionInput" class="sci-input w-full rounded-xl px-3 py-2.5 text-sm"><option value="title">标题域计算</option><option value="abstract">摘要浓缩</option><option value="introduction">引言背景构建</option><option value="lit_review">先验文献网</option><option value="methodology">算法与方法论</option><option value="results_discussion">数据验证与辩护</option><option value="conclusion">结论推演</option><option value="full_draft" selected>全篇贯通草案</option></select></label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">挂载私有域知识库</span><select id="paperCategoryInput" class="sci-input w-full rounded-xl px-3 py-2.5"></select></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">生成模型</span><select id="paperModelSelect" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="auto">自动路由（推荐）</option><option value="gemma4:e4b">gemma4:e4b（更快）</option><option value="gemma4:26b">gemma4:26b（更强）</option></select></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">修辞编码规范</span><select id="paperStyleInput" class="sci-input w-full rounded-xl px-3 py-2.5 text-sm"><option value="academic">严格学术八股</option><option value="formal">稳重工程规范</option><option value="concise">极简奥卡姆剃刀</option></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">篇幅张量限制</span><select id="paperLengthInput" class="sci-input w-full rounded-xl px-3 py-2.5 text-sm"><option value="short">Min</option><option value="medium" selected>Avg</option><option value="long">Max</option></select></label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">核心论点/公式/模型硬注入</span><textarea id="paperMustIncludeInput" rows="3" class="sci-input w-full rounded-xl px-4 py-2 custom-scrollbar"></textarea></label>
+                <label class="block"><span class="text-sm text-purple-400 mb-1 block">超参数约束</span><textarea id="constraintsInput" rows="3" class="sci-input w-full rounded-xl px-4 py-2 custom-scrollbar"></textarea></label>
+                <div class="pt-2 flex flex-col gap-3">
+                  <button id="paperGenerateBtn" class="w-full rounded-xl bg-cyan-700/80 text-white px-4 py-3 font-bold border border-cyan-500">激活模型渲染文献</button>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button id="paperCopyBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">Copy Buffer</button>
+                    <button id="exportPaperMdBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">Export MD</button>
+                    <button id="exportPaperDocxBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">Export DOCX</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="lg:col-span-3 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-cyan-800/60 flex flex-col flex-grow min-h-[60vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-900/50"><h2 class="text-xl font-bold text-cyan-300">编译渲染图层</h2><span id="paperStatusText" class="text-sm font-mono text-cyan-600">Awaiting compilation.</span></div>
+                <div class="rounded-2xl bg-[#01040a] border border-cyan-900/60 p-6 overflow-y-auto custom-scrollbar flex-grow"><div id="paperContent" class="markdown-body"><p class="text-cyan-800 italic">文献图层初始化中...</p></div></div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60"><h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">引文及知识源指针</h2><div id="paperSourcesBox" class="space-y-3"><div class="text-sm text-cyan-900 font-mono">Index empty.</div></div></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tab-talk" class="tab-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 bg-[#0a1220]/80 rounded-2xl p-6 border border-cyan-900/50 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <h2 class="text-xl font-bold text-cyan-100 mb-5">谈话记录生成</h2>
+              <div class="space-y-4">
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">学生姓名</span><input id="talkStudentNameInput" class="sci-input w-full rounded-xl px-4 py-2.5" /></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">学号</span><input id="talkStudentIdInput" class="sci-input w-full rounded-xl px-4 py-2.5" /></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">班级</span><input id="talkClassInput" class="sci-input w-full rounded-xl px-4 py-2.5" /></label>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">谈话类型</span><select id="talkTypeInput" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="academic">学业谈话</option><option value="mental_health">心理谈话</option></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">生成模型</span><select id="talkModelSelect" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="auto">自动路由</option><option value="gemma4:e4b">gemma4:e4b</option><option value="gemma4:26b">gemma4:26b</option></select></label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">挂载知识库（可选）</span><select id="talkCategoryInput" class="sci-input w-full rounded-xl px-3 py-2.5"></select></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">谈话背景</span><textarea id="talkBackgroundInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">主要问题</span><textarea id="talkMainIssueInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">学生陈述</span><textarea id="talkStudentStatementInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">辅导员引导</span><textarea id="talkGuidanceInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">后续措施</span><textarea id="talkFollowupInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <div class="pt-2 flex flex-col gap-3">
+                  <button id="talkGenerateBtn" class="w-full rounded-xl bg-cyan-700/80 text-white px-4 py-3 font-bold border border-cyan-500">生成谈话记录</button>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button id="talkCopyBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">复制</button>
+                    <button id="talkExportMdBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">导出 MD</button>
+                    <button id="talkToProfileBtn" class="rounded-lg border border-purple-800 px-2 py-2 text-xs font-medium text-purple-300">生成画像</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="lg:col-span-3 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-cyan-800/60 flex flex-col flex-grow min-h-[60vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-900/50"><h2 class="text-xl font-bold text-cyan-300">谈话记录结果</h2><span id="talkStatusText" class="text-sm font-mono text-cyan-600">Standby.</span></div>
+                <div class="rounded-2xl bg-[#01040a] border border-cyan-900/60 p-6 overflow-y-auto custom-scrollbar flex-grow"><div id="talkContent" class="markdown-body"><p class="text-cyan-800 italic">等待生成谈话记录...</p></div></div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60"><h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">参考资料</h2><div id="talkSourcesBox" class="space-y-3"><div class="text-sm text-cyan-900 font-mono">No data.</div></div></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tab-profile" class="tab-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 bg-[#0a1220]/80 rounded-2xl p-6 border border-cyan-900/50 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <h2 class="text-xl font-bold text-cyan-100 mb-5">学生画像生成</h2>
+              <div class="space-y-4">
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">学生姓名</span><input id="profileStudentNameInput" class="sci-input w-full rounded-xl px-4 py-2.5" /></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">班级</span><input id="profileClassInput" class="sci-input w-full rounded-xl px-4 py-2.5" /></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">画像模式</span><select id="profileModeInput" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="brief">简版</option><option value="full">完整版</option><option value="risk">风险关注版</option></select></label>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">挂载知识库（可选）</span><select id="profileCategoryInput" class="sci-input w-full rounded-xl px-3 py-2.5"></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">生成模型</span><select id="profileModelSelect" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="auto">自动路由</option><option value="gemma4:e4b">gemma4:e4b</option><option value="gemma4:26b">gemma4:26b</option></select></label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">已知信息</span><textarea id="profileKnownInfoInput" rows="6" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="可填写成绩、宿舍表现、请假情况、预警情况、谈话摘要等"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">补充说明</span><textarea id="profileNotesInput" rows="4" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <div class="pt-2 flex flex-col gap-3">
+                  <button id="profileGenerateBtn" class="w-full rounded-xl bg-cyan-700/80 text-white px-4 py-3 font-bold border border-cyan-500">生成学生画像</button>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button id="profileCopyBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">复制</button>
+                    <button id="profileExportMdBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">导出 MD</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="lg:col-span-3 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-cyan-800/60 flex flex-col flex-grow min-h-[60vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-900/50"><h2 class="text-xl font-bold text-cyan-300">学生画像结果</h2><span id="profileStatusText" class="text-sm font-mono text-cyan-600">Standby.</span></div>
+                <div class="rounded-2xl bg-[#01040a] border border-cyan-900/60 p-6 overflow-y-auto custom-scrollbar flex-grow"><div id="profileContent" class="markdown-body"><p class="text-cyan-800 italic">等待生成学生画像...</p></div></div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-purple-800/60">
+                <div class="flex items-center justify-between mb-3">
+                  <h2 class="text-sm font-bold text-purple-300 uppercase tracking-wider">风险雷达图</h2>
+                  <span id="profileRadarStatus" class="text-xs text-purple-500">等待学生画像生成</span>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 items-center">
+                  <div class="xl:col-span-2 rounded-2xl bg-[#01040a] border border-purple-900/60 p-4">
+                    <canvas id="profileRadarCanvas" width="720" height="420" class="w-full"></canvas>
+                  </div>
+                  <div id="profileRadarLegend" class="text-sm text-cyan-200 leading-7">
+                    <div class="text-cyan-800">生成学生画像后自动绘制。</div>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60"><h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">参考资料</h2><div id="profileSourcesBox" class="space-y-3"><div class="text-sm text-cyan-900 font-mono">No data.</div></div></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tab-exam" class="tab-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 bg-[#0a1220]/80 rounded-2xl p-6 border border-cyan-900/50 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <h2 class="text-xl font-bold text-cyan-100 mb-5">知识库出题</h2>
+              <div class="space-y-4">
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">出题主题</span><input id="examTopicInput" class="sci-input w-full rounded-xl px-4 py-2.5" placeholder="例：学籍管理、学生纪律处分、安全教育" /></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">题型</span><select id="examTypeInput" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="mixed">混合题型</option><option value="single">单选题</option><option value="multiple">多选题</option><option value="judge">判断题</option><option value="short">简答题</option></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">题目数量</span><input id="examCountInput" type="number" min="1" max="30" value="5" class="sci-input w-full rounded-xl px-4 py-2.5" /></label>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">难度</span><select id="examDifficultyInput" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="easy">简单</option><option value="medium" selected>中等</option><option value="hard">较难</option></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">生成模型</span><select id="examModelSelect" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="auto">自动路由</option><option value="gemma4:e4b">gemma4:e4b</option><option value="gemma4:26b">gemma4:26b</option></select></label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">挂载知识库（可选）</span><select id="examCategoryInput" class="sci-input w-full rounded-xl px-3 py-2.5"></select></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="flex items-center gap-2 text-sm text-cyan-300"><input type="checkbox" id="examAnswerInput" checked /> 包含答案</label>
+                  <label class="flex items-center gap-2 text-sm text-cyan-300"><input type="checkbox" id="examExplanationInput" checked /> 包含解析</label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">补充要求</span><textarea id="examExtraInput" rows="5" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：面向本科生；题目表述正式；尽量覆盖重点制度条款"></textarea></label>
+                <div class="pt-2 flex flex-col gap-3">
+                  <button id="examGenerateBtn" class="w-full rounded-xl bg-cyan-700/80 text-white px-4 py-3 font-bold border border-cyan-500">生成试题</button>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button id="examCopyBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">复制</button>
+                    <button id="examExportMdBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">导出 MD</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="lg:col-span-3 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-cyan-800/60 flex flex-col flex-grow min-h-[60vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-900/50"><h2 class="text-xl font-bold text-cyan-300">试题生成结果</h2><span id="examStatusText" class="text-sm font-mono text-cyan-600">Standby.</span></div>
+                <div class="rounded-2xl bg-[#01040a] border border-cyan-900/60 p-6 overflow-y-auto custom-scrollbar flex-grow"><div id="examContent" class="markdown-body"><p class="text-cyan-800 italic">等待生成试题...</p></div></div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60"><h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">参考资料</h2><div id="examSourcesBox" class="space-y-3"><div class="text-sm text-cyan-900 font-mono">No data.</div></div></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tab-simulation" class="tab-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 bg-[#0a1220]/80 rounded-2xl p-6 border border-cyan-900/50 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <h2 class="text-xl font-bold text-cyan-100 mb-5">智能谈话模拟器</h2>
+              <div class="space-y-4">
+                <label class="block">
+                  <span class="text-sm text-cyan-500 mb-1 block">学生类型</span>
+                  <select id="simStudentTypeInput" class="sci-input w-full rounded-xl px-3 py-2.5">
+                    <option value="unwilling">不愿沟通型</option>
+                    <option value="depressed">情绪低落型</option>
+                    <option value="resistant">逆反抵触型</option>
+                    <option value="anxious">迷茫焦虑型</option>
+                    <option value="defensive">违纪狡辩型</option>
+                    <option value="silent_family">家庭困难沉默型</option>
+                    <option value="employment_avoidant">就业逃避型</option>
+                  </select>
+                </label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">谈话主题</span><input id="simTopicInput" class="sci-input w-full rounded-xl px-4 py-2.5" placeholder="例：学业预警谈话、违纪教育谈话、就业压力谈话" /></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">训练难度</span><select id="simDifficultyInput" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="easy">简单</option><option value="medium" selected>中等</option><option value="hard">困难</option></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">生成模型</span><select id="simModelSelect" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="auto">自动路由</option><option value="gemma4:e4b">gemma4:e4b</option><option value="gemma4:26b">gemma4:26b</option></select></label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">挂载知识库（可选）</span><select id="simCategoryInput" class="sci-input w-full rounded-xl px-3 py-2.5"></select></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">学生背景设定（可选）</span><textarea id="simProfileInput" rows="5" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="不填则自动生成。可填写学生背景、近期表现、谈话触发原因等。"></textarea></label>
+                <div class="pt-2 flex flex-col gap-3">
+                  <button id="simStartBtn" class="w-full rounded-xl bg-cyan-700/80 text-white px-4 py-3 font-bold border border-cyan-500">开始模拟</button>
+                  <button id="simEvaluateBtn" class="w-full rounded-xl bg-purple-900/60 text-purple-100 px-4 py-3 font-bold border border-purple-700">结束并评分</button>
+                  <button id="simResetBtn" class="w-full rounded-xl border border-cyan-800 px-4 py-2.5 text-cyan-500">重置训练</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="lg:col-span-2 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-cyan-800/60 flex flex-col min-h-[70vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-900/50">
+                  <h2 class="text-xl font-bold text-cyan-300">模拟谈话窗口</h2>
+                  <span id="simStatusText" class="text-sm font-mono text-cyan-600">Standby.</span>
+                </div>
+                <div id="simChatBox" class="flex-grow rounded-2xl bg-[#01040a] border border-cyan-900/60 p-5 overflow-y-auto custom-scrollbar space-y-4">
+                  <div class="text-cyan-800 italic">请选择学生类型并开始模拟。</div>
+                </div>
+                <div class="mt-4 flex gap-3">
+                  <textarea id="simCounselorInput" rows="2" class="sci-input flex-grow rounded-xl px-4 py-3 custom-scrollbar" placeholder="输入你的谈话内容，Ctrl/⌘ + Enter 快速发送"></textarea>
+                  <button id="simSendBtn" class="rounded-xl bg-cyan-700/80 text-white px-5 py-2.5 font-bold border border-cyan-500">发送</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="lg:col-span-1 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-purple-800/60">
+                <h2 class="text-sm font-bold text-purple-300 mb-3 uppercase tracking-wider">训练评分</h2>
+                <div id="simEvaluationBox" class="markdown-body text-sm"><p class="text-cyan-800 italic">结束训练后自动生成评分。</p></div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60">
+                <h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">模拟参考资料</h2>
+                <div id="simSourcesBox" class="space-y-3"><div class="text-sm text-cyan-900 font-mono">No data.</div></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tab-case" class="tab-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 bg-[#0a1220]/80 rounded-2xl p-6 border border-cyan-900/50 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <h2 class="text-xl font-bold text-cyan-100 mb-5">多角色协同个案会商智能体</h2>
+              <div class="space-y-4">
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">个案标题</span><input id="caseTitleInput" class="sci-input w-full rounded-xl px-4 py-2.5" placeholder="例：挂科严重伴随情绪低落学生个案" /></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">学生基本信息</span><textarea id="caseStudentInfoInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="姓名可匿名，填写年级、专业、班级、基本情况等"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">核心问题</span><textarea id="caseMainIssuesInput" rows="4" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：挂科严重、家庭矛盾、情绪低落、不愿沟通、经济困难"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">已知背景</span><textarea id="caseBackgroundInput" rows="4" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">当前已采取措施</span><textarea id="caseMeasuresInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">重点研判问题</span><textarea id="caseFocusInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：是否需要上报学院、是否需要心理中心介入、是否需要家校沟通"></textarea></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">紧急程度</span><select id="caseUrgencyInput" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="low">一般</option><option value="medium" selected>中等</option><option value="high">较急</option><option value="critical">紧急</option></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">生成模型</span><select id="caseModelSelect" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="auto">自动路由（推荐）</option><option value="gemma4:e4b">gemma4:e4b（稳定快速）</option><option value="gemma4:26b">gemma4:26b（较慢，适合定稿）</option></select></label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">挂载知识库（可选）</span><select id="caseCategoryInput" class="sci-input w-full rounded-xl px-3 py-2.5"></select></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">补充要求</span><textarea id="caseExtraInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：输出更适合学院副书记审阅；加强政策合规；语气稳妥"></textarea></label>
+                <div class="pt-2 flex flex-col gap-3">
+                  <button id="caseGenerateBtn" class="w-full rounded-xl bg-cyan-700/80 text-white px-4 py-3 font-bold border border-cyan-500">分角色会商</button>
+                  <button id="caseGraphBtn" class="w-full rounded-xl bg-purple-900/70 text-purple-100 px-4 py-3 font-bold border border-purple-600">LangGraph会商</button>
+                  <button id="caseConsensusBtn" class="w-full rounded-xl bg-amber-900/70 text-amber-100 px-4 py-3 font-bold border border-amber-600">协商式会商</button>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button id="caseCopyBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">复制</button>
+                    <button id="caseExportMdBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">导出 MD</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="lg:col-span-3 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-cyan-800/60 flex flex-col flex-grow min-h-[65vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-900/50">
+                  <h2 class="text-xl font-bold text-cyan-300">会商报告</h2>
+                  <span id="caseStatusText" class="text-sm font-mono text-cyan-600">Standby.</span>
+                </div>
+                <div class="rounded-2xl bg-[#01040a] border border-cyan-900/60 p-6 overflow-y-auto custom-scrollbar flex-grow">
+                  <div id="caseContent" class="markdown-body"><p class="text-cyan-800 italic">填写复杂学生个案信息后，启动多角色协同会商。</p></div>
+                </div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60">
+                <h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">会商参考资料</h2>
+                <div id="caseSourcesBox" class="space-y-3"><div class="text-sm text-cyan-900 font-mono">No data.</div></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tab-sandbox" class="tab-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 bg-[#0a1220]/80 rounded-2xl p-6 border border-cyan-900/50 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <h2 class="text-xl font-bold text-cyan-100 mb-5">学生个案沙盘推演 Agent</h2>
+              <div class="space-y-4">
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">个案标题</span><input id="sandboxTitleInput" class="sci-input w-full rounded-xl px-4 py-2.5" placeholder="例：挂科严重伴随家庭矛盾个案推演" /></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">学生基本信息</span><textarea id="sandboxStudentInfoInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">核心问题</span><textarea id="sandboxMainIssuesInput" rows="4" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：挂科严重 + 家庭矛盾 + 情绪低落 + 不愿沟通 + 经济困难"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">已知背景</span><textarea id="sandboxBackgroundInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">当前状态</span><textarea id="sandboxCurrentStateInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：近期缺课，微信回复慢，室友反映情绪低落"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">当前已采取措施</span><textarea id="sandboxMeasuresInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar"></textarea></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">推演周期</span><select id="sandboxPeriodInput" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="72小时">72小时</option><option value="两周" selected>两周</option><option value="一个月">一个月</option><option value="一学期">一学期</option></select></label>
+                  <label class="block"><span class="text-sm text-cyan-500 mb-1 block">模型</span><select id="sandboxModelSelect" class="sci-input w-full rounded-xl px-3 py-2.5"><option value="auto">自动路由（推荐）</option><option value="gemma4:e4b">gemma4:e4b（稳定快速）</option><option value="gemma4:26b">gemma4:26b（较慢，适合定稿）</option></select></label>
+                </div>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">重点关注</span><textarea id="sandboxFocusInput" rows="2" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：心理风险、挂科退学风险、家校沟通、资助帮扶"></textarea></label>
+                <label class="block"><span class="text-sm text-cyan-500 mb-1 block">挂载知识库（可选）</span><select id="sandboxCategoryInput" class="sci-input w-full rounded-xl px-3 py-2.5"></select></label>
+
+                <details class="rounded-xl border border-cyan-900/60 p-3 bg-[#040a15]">
+                  <summary class="text-sm text-cyan-300 cursor-pointer">自定义三条推演路径（可选）</summary>
+                  <div class="space-y-3 mt-3">
+                    <textarea id="sandboxScenarioAInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="路径A：不填则默认温和支持型"></textarea>
+                    <textarea id="sandboxScenarioBInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="路径B：不填则默认多方联动型"></textarea>
+                    <textarea id="sandboxScenarioCInput" rows="3" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="路径C：不填则默认底线管理型"></textarea>
+                  </div>
+                </details>
+
+                <button id="sandboxGenerateBtn" class="w-full rounded-xl bg-purple-900/70 text-purple-100 px-4 py-3 font-bold border border-purple-600">启动沙盘推演</button>
+              </div>
+            </section>
+
+            <section class="lg:col-span-3 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-purple-800/60 flex flex-col flex-grow min-h-[65vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-purple-900/50">
+                  <h2 class="text-xl font-bold text-purple-300">沙盘推演报告</h2>
+                  <span id="sandboxStatusText" class="text-sm font-mono text-purple-500">Standby.</span>
+                </div>
+                <div class="rounded-2xl bg-[#01040a] border border-purple-900/60 p-6 overflow-y-auto custom-scrollbar flex-grow">
+                  <div id="sandboxContent" class="markdown-body"><p class="text-cyan-800 italic">填写个案信息后，启动沙盘推演。</p></div>
+                </div>
+              </div>
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60">
+                <h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">推演参考资料</h2>
+                <div id="sandboxSourcesBox" class="space-y-3"><div class="text-sm text-cyan-900 font-mono">No data.</div></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tab-excelagent" class="tab-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <section class="lg:col-span-1 bg-[#0a1220]/80 rounded-2xl p-6 border border-cyan-900/50 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <h2 class="text-xl font-bold text-cyan-100 mb-5">Excel 智能分析 Agent</h2>
+
+              <div class="space-y-4">
+                <label class="block">
+                  <span class="text-sm text-cyan-500 mb-1 block">上传 Excel</span>
+                  <input id="excelAgentFileInput" type="file" accept=".xlsx,.xls,.xlsm" class="sci-input w-full rounded-xl px-3 py-2.5" />
+                </label>
+
+                <button id="excelAgentUploadBtn" class="w-full rounded-xl bg-cyan-700/80 text-white px-4 py-3 font-bold border border-cyan-500">上传并解析</button>
+
+                <label class="block">
+                  <span class="text-sm text-cyan-500 mb-1 block">选择 Sheet</span>
+                  <select id="excelAgentSheetSelect" class="sci-input w-full rounded-xl px-3 py-2.5"></select>
+                </label>
+
+                <button id="excelAgentProfileBtn" class="w-full rounded-xl border border-cyan-800 px-4 py-2.5 text-cyan-400">重新解析 Sheet</button>
+
+                <label class="block">
+                  <span class="text-sm text-cyan-500 mb-1 block">分析需求</span>
+                  <textarea id="excelAgentQuestionInput" rows="4" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：帮我做成绩预警分析，找出挂科较多和平均分偏低的学生，并按班级统计。">帮我做成绩预警分析，找出需要重点关注的学生，并按班级对比预警情况。</textarea>
+                </label>
+
+                <label class="block">
+                  <span class="text-sm text-cyan-500 mb-1 block">手动排除课程列（可选）</span>
+                  <textarea id="excelAgentExcludeInput" rows="2" class="sci-input w-full rounded-xl px-4 py-3 custom-scrollbar" placeholder="例：序号, 平均分, 总分, 绩点, 排名, 挂科门数">序号, 平均分, 总分, 绩点, 排名, 挂科门数</textarea>
+                  <span class="text-xs text-cyan-700">这些列不会参与课程挂科统计；没有班级列时不会强行班级统计。</span>
+                </label>
+
+                <div class="grid grid-cols-1 gap-2">
+                  <button id="excelAgentAnalyzeBtn" class="w-full rounded-xl bg-purple-900/70 text-purple-100 px-4 py-3 font-bold border border-purple-600">Agent智能分析</button>
+                  <button id="excelAgentPythonBtn" class="w-full rounded-xl bg-fuchsia-900/70 text-fuchsia-100 px-4 py-3 font-bold border border-fuchsia-600">Python高级分析</button>
+                  <button id="excelAgentFollowupBtn" class="w-full rounded-xl border border-purple-800 px-4 py-2.5 text-purple-300">连续追问</button>
+                  <button id="excelAgentGradeBtn" class="w-full rounded-xl border border-amber-800 px-4 py-2.5 text-amber-300">成绩预警专用分析</button>
+                </div>
+
+                <div class="rounded-xl border border-cyan-900/60 bg-[#040a15] p-3">
+                  <div class="text-xs text-cyan-700 mb-2">当前会话</div>
+                  <div id="excelAgentSessionBox" class="text-xs text-cyan-300 font-mono break-all">No session.</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <button id="excelExportMdBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">导出MD</button>
+                  <button id="excelExportWordBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">导出Word</button>
+                  <button id="excelExportPdfBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">导出PDF</button>
+                  <button id="excelExportExcelBtn" class="rounded-lg border border-cyan-800 px-2 py-2 text-xs font-medium text-cyan-400">导出结果表</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="lg:col-span-1 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60">
+                <h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">数据结构识别</h2>
+                <div id="excelAgentProfileBox" class="text-sm text-cyan-200 space-y-2">
+                  <div class="text-cyan-800 italic">上传 Excel 后自动识别字段。</div>
+                </div>
+              </div>
+
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-purple-800/60">
+                <h2 class="text-sm font-bold text-purple-400 mb-3 uppercase tracking-wider">Agent分析计划</h2>
+                <div id="excelAgentPlanBox" class="text-xs text-purple-100 space-y-2 max-h-[28vh] overflow-auto custom-scrollbar">
+                  <div class="text-cyan-800 italic">分析后显示 Gemma4 规划步骤。</div>
+                </div>
+              </div>
+
+              <div class="bg-[#040a15]/80 rounded-2xl p-5 border border-cyan-800/60">
+                <h2 class="text-sm font-bold text-cyan-600 mb-3 uppercase tracking-wider">数据预览</h2>
+                <div id="excelAgentPreviewBox" class="overflow-auto custom-scrollbar max-h-[42vh] text-xs text-cyan-200">
+                  <div class="text-cyan-800 italic">等待数据预览。</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="lg:col-span-2 flex flex-col gap-6">
+              <div class="bg-[#040a15]/80 rounded-3xl p-6 border border-purple-800/60 flex flex-col min-h-[75vh]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-purple-900/50">
+                  <h2 class="text-xl font-bold text-purple-300">分析报告</h2>
+                  <span id="excelAgentStatusText" class="text-sm font-mono text-purple-500">Standby.</span>
+                </div>
+                <div class="rounded-2xl bg-[#01040a] border border-purple-900/60 p-6 overflow-y-auto custom-scrollbar flex-grow">
+                  <div id="excelAgentReportBox" class="markdown-body"><p class="text-cyan-800 italic">上传 Excel 后开始分析。</p></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "";
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+
+    function switchTab(name) {
+      tabButtons.forEach(btn => {
+        const active = btn.dataset.tab === name;
+        btn.className = active
+          ? "tab-btn rounded-xl px-5 py-2.5 text-sm font-bold bg-cyan-900 text-cyan-50 border border-cyan-400"
+          : "tab-btn rounded-xl px-5 py-2.5 text-sm font-medium bg-transparent border border-cyan-800 text-cyan-600";
+      });
+      tabPanels.forEach(panel => panel.classList.add("hidden"));
+      document.getElementById(`tab-${name}`).classList.remove("hidden");
+    }
+    tabButtons.forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    async function postFormDownload(url, fields) {
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = url;
+      form.style.display = "none";
+      Object.entries(fields).forEach(([k, v]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = k;
+        input.value = v || "";
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+      form.remove();
+    }
+
+    function renderCategorySelect(el, categories) {
+      if (!el) return;
+      el.innerHTML = '<option value="">(无限制) 全部挂载点</option>' + categories.map(c => `<option value="${escapeHtml(c.key)}">${escapeHtml(c.label)} [${escapeHtml(c.key)}]</option>`).join("");
+    }
+
+    function uniqueFileNames(sources) {
+      const names = [];
+      const seen = new Set();
+      (sources || []).forEach(item => {
+        const name = item?.metadata?.source_file || "未知区块数据";
+        if (!seen.has(name)) {
+          seen.add(name);
+          names.push(name);
+        }
+      });
+      return names;
+    }
+
+    function renderFileSources(el, sources, emptyText) {
+      const names = uniqueFileNames(sources);
+      if (names.length === 0) {
+        el.innerHTML = `<div class="text-sm text-cyan-800 font-mono">${emptyText}</div>`;
+        return;
+      }
+      el.innerHTML = `<div class="source-wrap">${names.map(name => `<span class="source-pill">✦ ${escapeHtml(name)}</span>`).join("")}</div>`;
+    }
+
+    function renderHistory(el, items) {
+      if (!items || items.length === 0) {
+        el.innerHTML = '<div class="text-sm text-cyan-800 text-center py-4">无追溯记录</div>';
+        return;
+      }
+      el.innerHTML = items.map(item => `
+        <div class="rounded-xl border border-cyan-900 bg-[#0a1220] px-4 py-3 hover:border-cyan-500 transition mb-2 group">
+          <div class="text-[11px] text-cyan-700 mb-1 group-hover:text-cyan-400 transition">${escapeHtml(item.created_at)}</div>
+          <div class="font-medium text-sm leading-6 text-cyan-200 line-clamp-2">${escapeHtml(item.title)}</div>
+        </div>
+      `).join("");
+    }
+
+    async function loadHistory(kind, targetId) {
+      try {
+        const resp = await fetch(`${API_BASE}/history/${kind}`);
+        const data = await resp.json();
+        if (!resp.ok) return;
+        renderHistory(document.getElementById(targetId), data.items || []);
+      } catch {}
+    }
+
+    async function typesetMath() {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        await window.MathJax.typesetPromise();
+      }
+    }
+
+    async function typeMarkdown(targetEl, text, speed = 5) {
+      targetEl.innerHTML = "";
+      const cursor = document.createElement("span");
+      cursor.className = "typing-cursor";
+      cursor.textContent = "▋";
+      targetEl.appendChild(cursor);
+      let current = "";
+      const step = Math.max(1, Math.ceil(text.length / 250));
+      for (let i = 0; i < text.length; i += step) {
+        current = text.slice(0, i + step);
+        targetEl.innerHTML = marked.parse(current);
+        targetEl.appendChild(cursor);
+        await typesetMath();
+        await new Promise(r => setTimeout(r, speed));
+      }
+      targetEl.innerHTML = marked.parse(text || "");
+      await typesetMath();
+    }
+
+
+
+    async function streamPost(url, payload, handlers) {
+      const resp = await fetch(`${API_BASE}${url}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resp.ok || !resp.body) {
+        let errText = "流式接口受阻";
+        try {
+          const text = await resp.text();
+          if (text) errText = text;
+        } catch {}
+        throw new Error(errText);
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      function handlePayload(payload) {
+        if (payload.type === "token") {
+          handlers.onToken?.(payload.content || "");
+        } else if (payload.type === "stage") {
+          handlers.onStage?.(payload.stage || "");
+        } else if (payload.type === "sources") {
+          handlers.onSources?.(payload.sources || []);
+        } else if (payload.type === "done") {
+          handlers.onDone?.(payload);
+        } else if (payload.type === "error") {
+          throw new Error(payload.message || "流式生成异常");
+        }
+      }
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        buffer = buffer.replace(/\r\n/g, "\n");
+
+        let sepIndex;
+        while ((sepIndex = buffer.indexOf("\n\n")) !== -1) {
+          const eventBlock = buffer.slice(0, sepIndex).trim();
+          buffer = buffer.slice(sepIndex + 2);
+          if (!eventBlock) continue;
+          const lines = eventBlock.split("\n").map(line => line.trim()).filter(Boolean);
+          for (const line of lines) {
+            if (!line.startsWith("data:")) continue;
+            const payloadText = line.slice(5).trim();
+            if (!payloadText) continue;
+            handlePayload(JSON.parse(payloadText));
+          }
+          await typesetMath();
+        }
+      }
+
+      if (buffer.trim()) {
+        const normalizedTail = buffer.replace(/\r\n/g, "\n");
+        const tailRegex = new RegExp('data:\\s*\\{[\\s\\S]*?\\}(?=\\n?data:|$)', 'g');
+        const matches = normalizedTail.match(tailRegex) || [];
+        for (const item of matches) {
+          const payloadText = item.replace("data:", "").trim();
+          if (!payloadText) continue;
+          handlePayload(JSON.parse(payloadText));
+        }
+        await typesetMath();
+      }
+    }
+
+    function renderSourceNames(el, names, emptyText) {
+      if (!names || names.length === 0) {
+        el.innerHTML = `<div class="text-sm text-cyan-800 font-mono">${emptyText}</div>`;
+        return;
+      }
+      el.innerHTML = `<div class="source-wrap">${names.map(name => `<span class="source-pill">✦ ${escapeHtml(name)}</span>`).join("")}</div>`;
+    }
+
+    function appendStreamingMarkdown(targetEl, text) {
+      targetEl.innerHTML = marked.parse(text || "");
+    }
+
+    async function loadSystemStatus() {
+      try {
+        const resp = await fetch(`${API_BASE}/system_status`);
+        const data = await resp.json();
+        if (!resp.ok) return;
+        document.getElementById("statusService").innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse inline-block"></span> ${data.service_status}`;
+        document.getElementById("statusModel").innerHTML = `QA:<span class="text-cyan-100">${data.qa_model}</span><br>NOTI:<span class="text-cyan-100">${data.notice_model}</span><br>PAP:<span class="text-cyan-100">${data.paper_model}</span><br>VIS:<span class="text-cyan-100">${data.vision_model}</span>`;
+        document.getElementById("statusEntries").textContent = data.kb_entries;
+        document.getElementById("statusMeta").textContent = `${data.category_count} / ${data.file_count}`;
+      } catch {}
+    }
+
+    async function loadCategories() {
+      try {
+        const resp = await fetch(`${API_BASE}/categories`);
+        const data = await resp.json();
+        if (!resp.ok) return;
+        const cats = data.categories || [];
+        renderCategorySelect(document.getElementById("askCategoryInput"), cats);
+        renderCategorySelect(document.getElementById("noticeCategoryInput"), cats);
+        renderCategorySelect(document.getElementById("paperCategoryInput"), cats);
+        renderCategorySelect(document.getElementById("talkCategoryInput"), cats);
+        renderCategorySelect(document.getElementById("profileCategoryInput"), cats);
+        renderCategorySelect(document.getElementById("examCategoryInput"), cats);
+        renderCategorySelect(document.getElementById("simCategoryInput"), cats);
+        renderCategorySelect(document.getElementById("caseCategoryInput"), cats);
+        renderCategorySelect(document.getElementById("sandboxCategoryInput"), cats);
+      } catch {}
+    }
+
+    const questionInput = document.getElementById("questionInput");
+    const askCategoryInput = document.getElementById("askCategoryInput");
+    const qaModelSelect = document.getElementById("qaModelSelect");
+    const askBtn = document.getElementById("askBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const excelQuestionInput = document.getElementById("excelQuestionInput");
+    const excelFileInput = document.getElementById("excelFileInput");
+    const sheetNameInput = document.getElementById("sheetNameInput");
+    const columnsInput = document.getElementById("columnsInput");
+    const excelAnalyzeBtn = document.getElementById("excelAnalyzeBtn");
+    const gradeWarningBtn = document.getElementById("gradeWarningBtn");
+    const exportExcelMdBtn = document.getElementById("exportExcelMdBtn");
+    const exportExcelReportBtn = document.getElementById("exportExcelReportBtn");
+    const excelStatus = document.getElementById("excelStatus");
+    const imageQuestionInput = document.getElementById("imageQuestionInput");
+    const imageFileInput = document.getElementById("imageFileInput");
+    const imageAnalyzeBtn = document.getElementById("imageAnalyzeBtn");
+    const imageStatus = document.getElementById("imageStatus");
+    const answerContent = document.getElementById("answerContent");
+    const askStatus = document.getElementById("askStatus");
+    const sourcesBox = document.getElementById("sourcesBox");
+    let latestExcel = { answer: "", preview_markdown: "", selected_sheet: "", analyzed_columns: [] };
+
+    async function askQuestion() {
+      const question = questionInput.value.trim();
+      if (!question) { askStatus.textContent = "Error: Empty payload."; return; }
+
+      askBtn.disabled = true;
+      askStatus.textContent = "Executing stream...";
+      answerContent.innerHTML = '<p class="text-cyan-700 italic">等待首个数据包...</p>';
+      sourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Tracing nodes...</div>';
+
+      try {
+        const resp = await fetch(`${API_BASE}/chat_stream`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question,
+            category: askCategoryInput.value || null,
+            model_choice: qaModelSelect.value
+          })
+        });
+
+        if (!resp.ok || !resp.body) {
+          let errText = "流式接口受阻";
+          try { const text = await resp.text(); if (text) errText = text; } catch {}
+          throw new Error(errText);
+        }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+        let fullText = "";
+
+        function handlePayload(payload) {
+          if (payload.type === "token") {
+            const token = payload.content || "";
+            if (token) {
+              fullText += token;
+              answerContent.innerHTML = marked.parse(fullText);
+            }
+          } else if (payload.type === "sources") {
+            const names = payload.sources || [];
+            if (!names.length) {
+              sourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">No tracing data.</div>';
+            } else {
+              sourcesBox.innerHTML = `<div class="source-wrap">${names.map(name => `<span class="source-pill">✦ ${escapeHtml(name)}</span>`).join("")}</div>`;
+            }
+          } else if (payload.type === "done") {
+            askStatus.textContent = "Stream complete.";
+          } else if (payload.type === "error") {
+            throw new Error(payload.message || "流式生成异常");
+          }
+        }
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          buffer = buffer.replace(/\r\n/g, "\n");
+
+          let sepIndex;
+          while ((sepIndex = buffer.indexOf("\n\n")) !== -1) {
+            const eventBlock = buffer.slice(0, sepIndex).trim();
+            buffer = buffer.slice(sepIndex + 2);
+            if (!eventBlock) continue;
+            const lines = eventBlock.split("\n").map(line => line.trim()).filter(Boolean);
+            for (const line of lines) {
+              if (!line.startsWith("data:")) continue;
+              const payloadText = line.slice(5).trim();
+              if (!payloadText) continue;
+              try { handlePayload(JSON.parse(payloadText)); } catch {}
+            }
+            await typesetMath();
+          }
+        }
+
+        if (buffer.trim()) {
+          const normalizedTail = buffer.replace(/\r\n/g, "\n");
+          const tailRegex = new RegExp('data:\\s*\\{[\\s\\S]*?\\}(?=\\n?data:|$)', 'g');
+          const matches = normalizedTail.match(tailRegex) || [];
+          for (const item of matches) {
+            const payloadText = item.replace("data:", "").trim();
+            try { handlePayload(JSON.parse(payloadText)); } catch {}
+          }
+          await typesetMath();
+        }
+
+        if (!fullText.trim()) {
+          answerContent.innerHTML = '<p class="text-red-400">前端仍未解析到 token。</p>';
+          askStatus.textContent = "Parse failed.";
+        } else if (askStatus.textContent !== "Stream complete.") {
+          askStatus.textContent = "Query Successful.";
+        }
+        await loadHistory("qa", "qaHistoryBox");
+      } catch (err) {
+        answerContent.innerHTML = `<p class="text-red-400">System Alert: ${escapeHtml(err.message)}</p>`;
+        sourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Trace failed.</div>';
+        askStatus.textContent = "Failed.";
+      } finally {
+        askBtn.disabled = false;
+      }
+    }
+
+    async function analyzeExcel() {
+      const file = excelFileInput.files && excelFileInput.files[0];
+      const question = excelQuestionInput.value.trim();
+      if (!file) { excelStatus.textContent = "请先上传表格"; return; }
+      if (!question) { excelStatus.textContent = "请输入分析问题"; return; }
+
+      excelAnalyzeBtn.disabled = true;
+      excelStatus.textContent = "Parsing Matrix...";
+      askStatus.textContent = "Analyzing Table...";
+      answerContent.innerHTML = '<span class="text-blue-500 italic flex items-center gap-2">解构高维数据表...</span>';
+      sourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Building DataFrame View...</div>';
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("question", question);
+        if (sheetNameInput.value.trim()) formData.append("sheet_name", sheetNameInput.value.trim());
+        if (columnsInput.value.trim()) formData.append("columns", columnsInput.value.trim());
+
+        const resp = await fetch(`${API_BASE}/analyze_excel`, { method: "POST", body: formData });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "矩阵解析失败");
+
+        latestExcel = data;
+        await typeMarkdown(answerContent, data.answer || "Empty compute result.");
+        sourcesBox.innerHTML = `<div class="rounded-xl border border-cyan-800 p-4 bg-[#0a1220] space-y-3"><div class="text-sm text-cyan-500 font-bold border-b border-cyan-900 pb-1">向量表投影元数据</div><div class="text-sm text-cyan-100 font-mono"><div><span class="text-cyan-600">有效层: </span>${escapeHtml((data.sheet_names || []).join(", "))}</div><div><span class="text-cyan-600">聚焦层: </span>${escapeHtml(data.selected_sheet || "")}</div><div><span class="text-cyan-600">提取轴: </span>${escapeHtml((data.analyzed_columns || []).join(", "))}</div></div><div class="pt-2"><div class="text-sm text-cyan-500 font-bold mb-2">DataFrame 快照</div><div class="rounded-lg bg-[#020617] border border-cyan-900 p-3 text-sm leading-6 whitespace-pre-wrap overflow-auto custom-scrollbar text-cyan-200 font-mono">${escapeHtml(data.preview_markdown || "")}</div></div></div>`;
+        excelStatus.textContent = "Compute Done.";
+        askStatus.textContent = "Task Completed.";
+      } catch (err) {
+        answerContent.innerHTML = `<p class="text-red-400">Core Exception: ${escapeHtml(err.message)}</p>`;
+        sourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Render block failed.</div>';
+        excelStatus.textContent = "Error.";
+        askStatus.textContent = "Failed.";
+      } finally {
+        excelAnalyzeBtn.disabled = false;
+      }
+    }
+
+    async function analyzeGradeWarning() {
+      const file = excelFileInput.files && excelFileInput.files[0];
+      if (!file) { excelStatus.textContent = "请先上传成绩表"; return; }
+
+      gradeWarningBtn.disabled = true;
+      excelStatus.textContent = "正在执行成绩预警分析...";
+      askStatus.textContent = "Grade warning analyzing...";
+      answerContent.innerHTML = '<span class="text-rose-400 italic">正在计算高风险学生...</span>';
+      sourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Building warning model...</div>';
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        if (sheetNameInput.value.trim()) formData.append("sheet_name", sheetNameInput.value.trim());
+
+        const resp = await fetch(`${API_BASE}/analyze_grade_warning`, { method: "POST", body: formData });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "成绩预警分析失败");
+
+        await typeMarkdown(answerContent, data.summary_markdown || "无结果");
+
+        let highRiskHtml = "";
+        if (data.high_risk && data.high_risk.length) {
+          highRiskHtml = `
+            <div class="rounded-xl border border-rose-800 p-4 bg-[#0a1220]">
+              <div class="text-sm text-rose-400 font-bold mb-2">高风险学生</div>
+              <div class="text-sm text-cyan-100 font-mono whitespace-pre-wrap">${escapeHtml(JSON.stringify(data.high_risk, null, 2))}</div>
+            </div>
+          `;
+        }
+
+        sourcesBox.innerHTML = `
+          <div class="space-y-4">
+            <div class="rounded-xl border border-cyan-800 p-4 bg-[#0a1220]">
+              <div class="text-sm text-cyan-400 font-bold mb-2">学生汇总预览</div>
+              <div class="text-sm text-cyan-100 font-mono whitespace-pre-wrap overflow-auto custom-scrollbar">${escapeHtml(data.table_preview || "")}</div>
+            </div>
+            ${highRiskHtml}
+          </div>
+        `;
+
+        excelStatus.textContent = "成绩预警分析完成";
+        askStatus.textContent = "Task Completed.";
+      } catch (err) {
+        answerContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        sourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">分析失败</div>';
+        excelStatus.textContent = "失败";
+        askStatus.textContent = "Failed.";
+      } finally {
+        gradeWarningBtn.disabled = false;
+      }
+    }
+
+    async function analyzeImage() {
+      const file = imageFileInput.files && imageFileInput.files[0];
+      const question = imageQuestionInput.value.trim();
+      if (!file) { imageStatus.textContent = "请先上传图片"; return; }
+      if (!question) { imageStatus.textContent = "请输入分析问题"; return; }
+
+      imageAnalyzeBtn.disabled = true;
+      imageStatus.textContent = "Vision Scanning...";
+      askStatus.textContent = "Vision Model Active...";
+      answerContent.innerHTML = '<span class="text-purple-500 italic flex items-center gap-2">提取全息图层特征...</span>';
+      sourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Image mode bypasses KB tracing.</div>';
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("question", question);
+
+        const resp = await fetch(`${API_BASE}/analyze_image`, { method: "POST", body: formData });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "视觉通道受阻");
+
+        await typeMarkdown(answerContent, data.answer || "Empty vision result.");
+        sourcesBox.innerHTML = `<div class="source-wrap"><span class="source-pill">▧ ${escapeHtml(data.filename || "V-Object Loaded")}</span></div>`;
+        imageStatus.textContent = "Scan Done.";
+        askStatus.textContent = "Task Completed.";
+      } catch (err) {
+        answerContent.innerHTML = `<p class="text-red-400">Vision Exception: ${escapeHtml(err.message)}</p>`;
+        sourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Trace failed.</div>';
+        imageStatus.textContent = "Error.";
+        askStatus.textContent = "Failed.";
+      } finally {
+        imageAnalyzeBtn.disabled = false;
+      }
+    }
+
+    askBtn.addEventListener("click", askQuestion);
+    excelAnalyzeBtn.addEventListener("click", analyzeExcel);
+    gradeWarningBtn.addEventListener("click", analyzeGradeWarning);
+    imageAnalyzeBtn.addEventListener("click", analyzeImage);
+    exportExcelMdBtn.addEventListener("click", () => postFormDownload(`${API_BASE}/export/excel/markdown`, { title: "矩阵计算报告", body: answerContent.textContent.trim() }));
+    exportExcelReportBtn.addEventListener("click", () => postFormDownload(`${API_BASE}/export/excel/report`, {
+      answer: latestExcel.answer || answerContent.textContent.trim(),
+      preview_markdown: latestExcel.preview_markdown || "",
+      selected_sheet: latestExcel.selected_sheet || "",
+      analyzed_columns: (latestExcel.analyzed_columns || []).join(", ")
+    }));
+    clearBtn.addEventListener("click", () => {
+      questionInput.value = "";
+      excelQuestionInput.value = "";
+      excelFileInput.value = "";
+      sheetNameInput.value = "";
+      columnsInput.value = "";
+      imageQuestionInput.value = "";
+      imageFileInput.value = "";
+      answerContent.innerHTML = '<p class="text-cyan-800 italic">系统状态已重置，内存释出。</p>';
+      sourcesBox.innerHTML = '<div class="text-sm text-cyan-900 font-mono">No tracing data.</div>';
+      askStatus.textContent = "Standby.";
+      excelStatus.textContent = "";
+      imageStatus.textContent = "";
+      latestExcel = { answer: "", preview_markdown: "", selected_sheet: "", analyzed_columns: [] };
+    });
+
+    const topicInput = document.getElementById("topicInput");
+    const audienceInput = document.getElementById("audienceInput");
+    const noticeCategoryInput = document.getElementById("noticeCategoryInput");
+    const noticeModelSelect = document.getElementById("noticeModelSelect");
+    const styleInput = document.getElementById("styleInput");
+    const lengthInput = document.getElementById("lengthInput");
+    const mustIncludeInput = document.getElementById("mustIncludeInput");
+    const generateBtn = document.getElementById("generateBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const exportNoticeMdBtn = document.getElementById("exportNoticeMdBtn");
+    const exportNoticeDocxBtn = document.getElementById("exportNoticeDocxBtn");
+    const noticeContent = document.getElementById("noticeContent");
+    const noticeSourcesBox = document.getElementById("noticeSourcesBox");
+    const statusText = document.getElementById("statusText");
+
+    async function generateNotice() {
+      const topic = topicInput.value.trim();
+      const audience = audienceInput.value.trim();
+      if (!topic || !audience) { statusText.textContent = "请补全主题和对象"; return; }
+
+      generateBtn.disabled = true;
+      statusText.textContent = "Streaming...";
+      noticeContent.innerHTML = '<span class="text-cyan-500 italic">正在流式生成通知...</span>';
+      noticeSourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Loading specs...</div>';
+      let fullText = "";
+
+      try {
+        await streamPost('/generate_notice_stream', {
+          topic,
+          audience,
+          category: noticeCategoryInput.value || null,
+          style: styleInput.value,
+          length: lengthInput.value,
+          must_include: mustIncludeInput.value.trim() || null,
+          model_choice: noticeModelSelect.value
+        }, {
+          onToken: (token) => { fullText += token; appendStreamingMarkdown(noticeContent, fullText); },
+          onSources: (names) => renderSourceNames(noticeSourcesBox, names, "No referenced specs."),
+          onDone: () => { statusText.textContent = "Stream complete."; }
+        });
+      } catch (err) {
+        noticeContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        noticeSourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Specs corrupted.</div>';
+        statusText.textContent = "Failed.";
+      } finally {
+        generateBtn.disabled = false;
+      }
+    }
+
+    generateBtn.addEventListener("click", generateNotice);
+    copyBtn.addEventListener("click", async () => {
+      const text = noticeContent.textContent.trim();
+      if (!text) return;
+      try { await navigator.clipboard.writeText(text); statusText.textContent = "Copied."; } catch { statusText.textContent = "Copy Failed."; }
+    });
+    exportNoticeMdBtn.addEventListener("click", () => postFormDownload(`${API_BASE}/export/notice/markdown`, { title: topicInput.value.trim() || "notice", body: noticeContent.textContent.trim() }));
+    exportNoticeDocxBtn.addEventListener("click", () => postFormDownload(`${API_BASE}/export/notice/docx`, { title: topicInput.value.trim() || "notice", body: noticeContent.textContent.trim() }));
+
+    const paperTopicInput = document.getElementById("paperTopicInput");
+    const paperTypeInput = document.getElementById("paperTypeInput");
+    const sectionInput = document.getElementById("sectionInput");
+    const paperCategoryInput = document.getElementById("paperCategoryInput");
+    const paperModelSelect = document.getElementById("paperModelSelect");
+    const paperStyleInput = document.getElementById("paperStyleInput");
+    const paperLengthInput = document.getElementById("paperLengthInput");
+    const paperMustIncludeInput = document.getElementById("paperMustIncludeInput");
+    const constraintsInput = document.getElementById("constraintsInput");
+    const paperGenerateBtn = document.getElementById("paperGenerateBtn");
+    const paperCopyBtn = document.getElementById("paperCopyBtn");
+    const exportPaperMdBtn = document.getElementById("exportPaperMdBtn");
+    const exportPaperDocxBtn = document.getElementById("exportPaperDocxBtn");
+    const paperContent = document.getElementById("paperContent");
+    const paperSourcesBox = document.getElementById("paperSourcesBox");
+    const paperStatusText = document.getElementById("paperStatusText");
+
+    async function generatePaper() {
+      const topic = paperTopicInput.value.trim();
+      if (!topic) { paperStatusText.textContent = "请补全主题"; return; }
+
+      paperGenerateBtn.disabled = true;
+      paperStatusText.textContent = "Streaming...";
+      paperContent.innerHTML = '<span class="text-cyan-500 italic">正在流式生成论文...</span>';
+      paperSourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Indexing DB...</div>';
+      let fullText = "";
+
+      try {
+        await streamPost('/generate_paper_stream', {
+          topic,
+          paper_type: paperTypeInput.value,
+          section: sectionInput.value,
+          category: paperCategoryInput.value || null,
+          style: paperStyleInput.value,
+          length: paperLengthInput.value,
+          must_include: paperMustIncludeInput.value.trim() || null,
+          constraints: constraintsInput.value.trim() || null,
+          model_choice: paperModelSelect.value
+        }, {
+          onToken: (token) => { fullText += token; appendStreamingMarkdown(paperContent, fullText); },
+          onSources: (names) => renderSourceNames(paperSourcesBox, names, "No DB hits."),
+          onDone: () => { paperStatusText.textContent = "Stream complete."; }
+        });
+      } catch (err) {
+        paperContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        paperSourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Index failure.</div>';
+        paperStatusText.textContent = "Failed.";
+      } finally {
+        paperGenerateBtn.disabled = false;
+      }
+    }
+
+    paperGenerateBtn.addEventListener("click", generatePaper);
+    paperCopyBtn.addEventListener("click", async () => {
+      const text = paperContent.textContent.trim();
+      if (!text) return;
+      try { await navigator.clipboard.writeText(text); paperStatusText.textContent = "Copied."; } catch { paperStatusText.textContent = "Copy Failed."; }
+    });
+    exportPaperMdBtn.addEventListener("click", () => postFormDownload(`${API_BASE}/export/paper/markdown`, { title: paperTopicInput.value.trim() || "paper", body: paperContent.textContent.trim() }));
+    exportPaperDocxBtn.addEventListener("click", () => postFormDownload(`${API_BASE}/export/paper/docx`, { title: paperTopicInput.value.trim() || "paper", body: paperContent.textContent.trim() }));
+
+    const talkStatusText = document.getElementById("talkStatusText");
+    const talkContent = document.getElementById("talkContent");
+    const talkSourcesBox = document.getElementById("talkSourcesBox");
+    const talkGenerateBtn = document.getElementById("talkGenerateBtn");
+    const talkCopyBtn = document.getElementById("talkCopyBtn");
+    const talkExportMdBtn = document.getElementById("talkExportMdBtn");
+    const talkToProfileBtn = document.getElementById("talkToProfileBtn");
+
+    async function generateTalkRecord() {
+      const student_name = document.getElementById("talkStudentNameInput").value.trim();
+      const background = document.getElementById("talkBackgroundInput").value.trim();
+      const main_issue = document.getElementById("talkMainIssueInput").value.trim();
+      if (!student_name || !background || !main_issue) { talkStatusText.textContent = "请补全姓名、背景、主要问题"; return; }
+
+      talkGenerateBtn.disabled = true;
+      talkStatusText.textContent = "Streaming...";
+      talkContent.innerHTML = '<span class="text-cyan-500 italic">正在流式生成谈话记录...</span>';
+      talkSourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Loading specs...</div>';
+      let fullText = "";
+
+      try {
+        await streamPost('/generate_talk_record_stream', {
+          student_name,
+          student_id: document.getElementById("talkStudentIdInput").value.trim() || null,
+          class_name: document.getElementById("talkClassInput").value.trim() || null,
+          talk_type: document.getElementById("talkTypeInput").value,
+          background,
+          main_issue,
+          student_statement: document.getElementById("talkStudentStatementInput").value.trim() || null,
+          counselor_guidance: document.getElementById("talkGuidanceInput").value.trim() || null,
+          follow_up_action: document.getElementById("talkFollowupInput").value.trim() || null,
+          category: document.getElementById("talkCategoryInput").value || null,
+          model_choice: document.getElementById("talkModelSelect").value
+        }, {
+          onToken: (token) => { fullText += token; appendStreamingMarkdown(talkContent, fullText); },
+          onSources: (names) => renderSourceNames(talkSourcesBox, names, "No DB hits."),
+          onDone: () => { talkStatusText.textContent = "Stream complete."; }
+        });
+      } catch (err) {
+        talkContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        talkSourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Trace failed.</div>';
+        talkStatusText.textContent = "Failed.";
+      } finally {
+        talkGenerateBtn.disabled = false;
+      }
+    }
+
+    talkGenerateBtn.addEventListener("click", generateTalkRecord);
+    talkCopyBtn.addEventListener("click", async () => {
+      const text = talkContent.textContent.trim();
+      if (!text) return;
+      try { await navigator.clipboard.writeText(text); talkStatusText.textContent = "Copied."; } catch { talkStatusText.textContent = "Copy Failed."; }
+    });
+    talkExportMdBtn.addEventListener("click", () => postFormDownload(`${API_BASE}/export/notice/markdown`, {
+      title: document.getElementById("talkStudentNameInput").value.trim() || "谈话记录",
+      body: talkContent.textContent.trim()
+    }));
+
+    async function generateProfileFromTalkRecord() {
+      const studentName = document.getElementById("talkStudentNameInput").value.trim();
+      const className = document.getElementById("talkClassInput").value.trim();
+      const talkText = talkContent.textContent.trim();
+
+      if (!studentName) {
+        talkStatusText.textContent = "请先填写学生姓名";
+        return;
+      }
+      if (!talkText || talkText.includes("等待生成谈话记录")) {
+        talkStatusText.textContent = "请先生成有效谈话记录";
+        return;
+      }
+
+      talkToProfileBtn.disabled = true;
+      talkStatusText.textContent = "正在根据谈话记录生成学生画像...";
+
+      try {
+        const resp = await fetch(`${API_BASE}/generate_student_profile`, {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            student_name: studentName,
+            class_name: className || null,
+            profile_mode: "risk",
+            known_info: talkText,
+            additional_notes: "请根据该谈话记录自动提炼学生画像，重点关注学习状态、主要问题、风险点和后续帮扶建议。",
+            category: document.getElementById("talkCategoryInput").value || null,
+            model_choice: document.getElementById("talkModelSelect").value
+          })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "学生画像生成失败");
+
+        document.getElementById("profileStudentNameInput").value = studentName;
+        document.getElementById("profileClassInput").value = className || "";
+        document.getElementById("profileModeInput").value = "risk";
+        document.getElementById("profileKnownInfoInput").value = talkText;
+        document.getElementById("profileNotesInput").value = "由谈话记录自动生成学生画像。";
+
+        await typeMarkdown(document.getElementById("profileContent"), data.profile || "");
+        renderProfileRadar(data.profile || "");
+        renderFileSources(document.getElementById("profileSourcesBox"), data.sources, "No DB hits.");
+
+        document.getElementById("profileStatusText").textContent = "由谈话记录生成完成。";
+        talkStatusText.textContent = "学生画像已生成，并已切换到画像页。";
+        switchTab("profile");
+      } catch (err) {
+        talkStatusText.textContent = "生成画像失败";
+        alert(`生成画像失败：${err.message}`);
+      } finally {
+        talkToProfileBtn.disabled = false;
+      }
+    }
+
+    talkToProfileBtn.addEventListener("click", generateProfileFromTalkRecord);
+
+    const profileStatusText = document.getElementById("profileStatusText");
+    const profileContent = document.getElementById("profileContent");
+    const profileSourcesBox = document.getElementById("profileSourcesBox");
+    const profileGenerateBtn = document.getElementById("profileGenerateBtn");
+    const profileCopyBtn = document.getElementById("profileCopyBtn");
+    const profileExportMdBtn = document.getElementById("profileExportMdBtn");
+    const profileRadarCanvas = document.getElementById("profileRadarCanvas");
+    const profileRadarLegend = document.getElementById("profileRadarLegend");
+    const profileRadarStatus = document.getElementById("profileRadarStatus");
+
+    function scoreByKeywords(text, keywordGroups) {
+      let score = 15;
+      const t = String(text || "");
+      keywordGroups.forEach(group => {
+        let groupHit = 0;
+        group.words.forEach(w => {
+          if (t.includes(w)) groupHit += 1;
+        });
+        if (groupHit > 0) score += group.weight * Math.min(groupHit, group.cap || 3);
+      });
+      return Math.max(0, Math.min(100, Math.round(score)));
+    }
+
+    function buildRadarScoresFromProfile(text) {
+      const commonHigh = [
+        { words: ["高风险", "重点关注", "严重", "危机", "退学", "留级", "预警", "多次", "长期"], weight: 7, cap: 4 },
+        { words: ["中风险", "持续关注", "需跟进", "偏低", "不足", "困难"], weight: 4, cap: 4 },
+        { words: ["低风险", "基本稳定", "较稳定", "正常", "良好"], weight: -4, cap: 4 }
+      ];
+      return [
+        { label: "学业风险", value: scoreByKeywords(text, [...commonHigh, { words: ["挂科", "不及格", "补考", "重修", "旷考", "缺课", "成绩", "绩点", "学习动力", "学业"], weight: 8, cap: 5 }]) },
+        { label: "心理情绪", value: scoreByKeywords(text, [...commonHigh, { words: ["焦虑", "抑郁", "情绪", "压力", "失眠", "心理", "自卑", "消极", "危机", "孤独"], weight: 8, cap: 5 }]) },
+        { label: "纪律行为", value: scoreByKeywords(text, [...commonHigh, { words: ["违纪", "处分", "旷课", "迟到", "早退", "饮酒", "打架", "违规", "翻墙", "不服从"], weight: 8, cap: 5 }]) },
+        { label: "宿舍人际", value: scoreByKeywords(text, [...commonHigh, { words: ["宿舍", "寝室", "人际", "矛盾", "冲突", "孤立", "同学关系", "室友", "适应"], weight: 7, cap: 5 }]) },
+        { label: "就业发展", value: scoreByKeywords(text, [...commonHigh, { words: ["就业", "升学", "考研", "职业", "规划", "迷茫", "实习", "简历", "去向"], weight: 6, cap: 5 }]) },
+        { label: "综合关注", value: scoreByKeywords(text, [...commonHigh, { words: ["家校沟通", "帮扶", "台账", "跟踪", "谈话", "班主任", "家长", "持续", "重点"], weight: 6, cap: 5 }]) }
+      ];
+    }
+
+    function drawProfileRadar(scores) {
+      if (!profileRadarCanvas) return;
+      const canvas = profileRadarCanvas;
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2 + 10;
+      const radius = Math.min(w, h) * 0.34;
+      const n = scores.length;
+      const levels = 5;
+
+      ctx.font = "18px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      for (let l = 1; l <= levels; l++) {
+        const r = radius * l / levels;
+        ctx.beginPath();
+        for (let i = 0; i < n; i++) {
+          const angle = -Math.PI / 2 + i * 2 * Math.PI / n;
+          const x = cx + r * Math.cos(angle);
+          const y = cy + r * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = "rgba(34, 211, 238, 0.18)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < n; i++) {
+        const angle = -Math.PI / 2 + i * 2 * Math.PI / n;
+        const x = cx + radius * Math.cos(angle);
+        const y = cy + radius * Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = "rgba(34, 211, 238, 0.16)";
+        ctx.stroke();
+
+        const lx = cx + (radius + 48) * Math.cos(angle);
+        const ly = cy + (radius + 34) * Math.sin(angle);
+        ctx.fillStyle = "rgba(207, 250, 254, 0.95)";
+        ctx.fillText(scores[i].label, lx, ly);
+      }
+
+      ctx.beginPath();
+      scores.forEach((s, i) => {
+        const angle = -Math.PI / 2 + i * 2 * Math.PI / n;
+        const r = radius * s.value / 100;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = "rgba(168, 85, 247, 0.28)";
+      ctx.strokeStyle = "rgba(216, 180, 254, 0.95)";
+      ctx.lineWidth = 3;
+      ctx.fill();
+      ctx.stroke();
+
+      scores.forEach((s, i) => {
+        const angle = -Math.PI / 2 + i * 2 * Math.PI / n;
+        const r = radius * s.value / 100;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = "rgba(34, 211, 238, 0.95)";
+        ctx.fill();
+
+        const vx = cx + (r + 22) * Math.cos(angle);
+        const vy = cy + (r + 18) * Math.sin(angle);
+        ctx.fillStyle = "rgba(103, 232, 249, 0.95)";
+        ctx.font = "16px system-ui, sans-serif";
+        ctx.fillText(String(s.value), vx, vy);
+      });
+    }
+
+    function renderProfileRadar(text) {
+      const scores = buildRadarScoresFromProfile(text);
+      drawProfileRadar(scores);
+      if (profileRadarLegend) {
+        profileRadarLegend.innerHTML = scores.map(s => {
+          let level = "低";
+          let cls = "text-emerald-300";
+          if (s.value >= 70) { level = "高"; cls = "text-rose-300"; }
+          else if (s.value >= 45) { level = "中"; cls = "text-yellow-300"; }
+          return `<div class="flex justify-between gap-4 border-b border-cyan-900/40 py-1"><span>${escapeHtml(s.label)}</span><span class="${cls} font-bold">${s.value} / ${level}</span></div>`;
+        }).join("") + `<div class="text-xs text-cyan-700 mt-3 leading-5">说明：雷达图由学生画像文本关键词自动估算，只作辅导员初筛参考，不能替代人工研判。</div>`;
+      }
+      if (profileRadarStatus) profileRadarStatus.textContent = "已根据学生画像自动生成";
+    }
+
+    async function generateStudentProfile() {
+      const student_name = document.getElementById("profileStudentNameInput").value.trim();
+      const known_info = document.getElementById("profileKnownInfoInput").value.trim();
+      if (!student_name || !known_info) { profileStatusText.textContent = "请补全姓名、已知信息"; return; }
+
+      profileGenerateBtn.disabled = true;
+      profileStatusText.textContent = "Streaming...";
+      profileContent.innerHTML = '<span class="text-cyan-500 italic">正在流式生成学生画像...</span>';
+      profileSourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Loading specs...</div>';
+      let fullText = "";
+
+      try {
+        await streamPost('/generate_student_profile_stream', {
+          student_name,
+          class_name: document.getElementById("profileClassInput").value.trim() || null,
+          profile_mode: document.getElementById("profileModeInput").value,
+          known_info,
+          additional_notes: document.getElementById("profileNotesInput").value.trim() || null,
+          category: document.getElementById("profileCategoryInput").value || null,
+          model_choice: document.getElementById("profileModelSelect").value
+        }, {
+          onToken: (token) => { fullText += token; appendStreamingMarkdown(profileContent, fullText); },
+          onSources: (names) => renderSourceNames(profileSourcesBox, names, "No DB hits."),
+          onDone: () => { renderProfileRadar(fullText); profileStatusText.textContent = "Stream complete."; }
+        });
+      } catch (err) {
+        profileContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        profileSourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Trace failed.</div>';
+        profileStatusText.textContent = "Failed.";
+      } finally {
+        profileGenerateBtn.disabled = false;
+      }
+    }
+
+    profileGenerateBtn.addEventListener("click", generateStudentProfile);
+    profileCopyBtn.addEventListener("click", async () => {
+      const text = profileContent.textContent.trim();
+      if (!text) return;
+      try { await navigator.clipboard.writeText(text); profileStatusText.textContent = "Copied."; } catch { profileStatusText.textContent = "Copy Failed."; }
+    });
+    profileExportMdBtn.addEventListener("click", () => postFormDownload(`${API_BASE}/export/notice/markdown`, {
+      title: document.getElementById("profileStudentNameInput").value.trim() || "学生画像",
+      body: profileContent.textContent.trim()
+    }));
+
+    const examStatusText = document.getElementById("examStatusText");
+    const examContent = document.getElementById("examContent");
+    const examSourcesBox = document.getElementById("examSourcesBox");
+    const examGenerateBtn = document.getElementById("examGenerateBtn");
+    const examCopyBtn = document.getElementById("examCopyBtn");
+    const examExportMdBtn = document.getElementById("examExportMdBtn");
+
+    async function generateExamQuestions() {
+      const topic = document.getElementById("examTopicInput").value.trim();
+      if (!topic) { examStatusText.textContent = "请填写出题主题"; return; }
+
+      examGenerateBtn.disabled = true;
+      examStatusText.textContent = "Streaming...";
+      examContent.innerHTML = '<span class="text-cyan-500 italic">正在流式生成试题...</span>';
+      examSourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Loading specs...</div>';
+      let fullText = "";
+
+      try {
+        await streamPost('/generate_exam_questions_stream', {
+          topic,
+          question_type: document.getElementById("examTypeInput").value,
+          count: parseInt(document.getElementById("examCountInput").value || "5", 10),
+          difficulty: document.getElementById("examDifficultyInput").value,
+          include_answer: document.getElementById("examAnswerInput").checked,
+          include_explanation: document.getElementById("examExplanationInput").checked,
+          extra_requirements: document.getElementById("examExtraInput").value.trim() || null,
+          category: document.getElementById("examCategoryInput").value || null,
+          model_choice: document.getElementById("examModelSelect").value
+        }, {
+          onToken: (token) => { fullText += token; appendStreamingMarkdown(examContent, fullText); },
+          onSources: (names) => renderSourceNames(examSourcesBox, names, "No DB hits."),
+          onDone: () => { examStatusText.textContent = "Stream complete."; }
+        });
+      } catch (err) {
+        examContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        examSourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Trace failed.</div>';
+        examStatusText.textContent = "Failed.";
+      } finally {
+        examGenerateBtn.disabled = false;
+      }
+    }
+
+    examGenerateBtn.addEventListener("click", generateExamQuestions);
+    examCopyBtn.addEventListener("click", async () => {
+      const text = examContent.textContent.trim();
+      if (!text) return;
+      try { await navigator.clipboard.writeText(text); examStatusText.textContent = "Copied."; } catch { examStatusText.textContent = "Copy Failed."; }
+    });
+    examExportMdBtn.addEventListener("click", () => postFormDownload(`${API_BASE}/export/notice/markdown`, {
+      title: document.getElementById("examTopicInput").value.trim() || "知识库试题",
+      body: examContent.textContent.trim()
+    }));
+
+
+    let simState = {
+      student_type: "",
+      topic: "",
+      difficulty: "medium",
+      student_profile: "",
+      dialogue_history: []
+    };
+
+    const simStudentTypeInput = document.getElementById("simStudentTypeInput");
+    const simTopicInput = document.getElementById("simTopicInput");
+    const simDifficultyInput = document.getElementById("simDifficultyInput");
+    const simModelSelect = document.getElementById("simModelSelect");
+    const simCategoryInput = document.getElementById("simCategoryInput");
+    const simProfileInput = document.getElementById("simProfileInput");
+    const simStartBtn = document.getElementById("simStartBtn");
+    const simEvaluateBtn = document.getElementById("simEvaluateBtn");
+    const simResetBtn = document.getElementById("simResetBtn");
+    const simSendBtn = document.getElementById("simSendBtn");
+    const simCounselorInput = document.getElementById("simCounselorInput");
+    const simChatBox = document.getElementById("simChatBox");
+    const simStatusText = document.getElementById("simStatusText");
+    const simEvaluationBox = document.getElementById("simEvaluationBox");
+    const simSourcesBox = document.getElementById("simSourcesBox");
+
+    function renderSimulationChat() {
+      if (!simChatBox) return;
+      if (!simState.dialogue_history || simState.dialogue_history.length === 0) {
+        simChatBox.innerHTML = '<div class="text-cyan-800 italic">请选择学生类型并开始模拟。</div>';
+        return;
+      }
+
+      simChatBox.innerHTML = simState.dialogue_history.map(item => {
+        const isCounselor = item.role === "counselor";
+        const name = isCounselor ? "辅导员" : "虚拟学生";
+        const cls = isCounselor
+          ? "ml-auto bg-cyan-900/40 border-cyan-700 text-cyan-50"
+          : "mr-auto bg-[#0a1220] border-purple-800/70 text-purple-100";
+        return `
+          <div class="max-w-[85%] rounded-2xl border px-4 py-3 ${cls}">
+            <div class="text-xs opacity-70 mb-1">${name}</div>
+            <div class="leading-7 whitespace-pre-wrap">${escapeHtml(item.content || "")}</div>
+          </div>
+        `;
+      }).join("");
+      simChatBox.scrollTop = simChatBox.scrollHeight;
+    }
+
+    async function startSimulation() {
+      const topic = simTopicInput.value.trim();
+      if (!topic) {
+        simStatusText.textContent = "请填写谈话主题";
+        return;
+      }
+
+      simStartBtn.disabled = true;
+      simStatusText.textContent = "Streaming...";
+      simChatBox.innerHTML = '<div class="text-cyan-500 italic">虚拟学生正在开场...</div>';
+      simEvaluationBox.innerHTML = '<p class="text-cyan-800 italic">训练进行中，结束后评分。</p>';
+      let opening = "";
+
+      try {
+        await streamPost('/simulation/start_stream', {
+          student_type: simStudentTypeInput.value,
+          topic,
+          difficulty: simDifficultyInput.value,
+          student_profile: simProfileInput.value.trim() || null,
+          category: simCategoryInput.value || null,
+          model_choice: simModelSelect.value
+        }, {
+          onToken: (token) => {
+            opening += token;
+            simChatBox.innerHTML = `<div class="max-w-[85%] rounded-2xl border px-4 py-3 mr-auto bg-[#0a1220] border-purple-800/70 text-purple-100"><div class="text-xs opacity-70 mb-1">虚拟学生</div><div class="leading-7 whitespace-pre-wrap">${escapeHtml(opening)}</div></div>`;
+          },
+          onSources: (names) => renderSourceNames(simSourcesBox, names, "No DB hits."),
+          onDone: (payload) => {
+            simState = {
+              student_type: simStudentTypeInput.value,
+              topic,
+              difficulty: simDifficultyInput.value,
+              student_profile: payload.student_profile || simProfileInput.value.trim(),
+              dialogue_history: payload.dialogue_history || [{ role: "student", content: opening }]
+            };
+            simProfileInput.value = simState.student_profile || "";
+            renderSimulationChat();
+            simStatusText.textContent = "模拟已开始";
+          }
+        });
+      } catch (err) {
+        simChatBox.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        simStatusText.textContent = "Failed.";
+      } finally {
+        simStartBtn.disabled = false;
+      }
+    }
+
+    async function sendSimulationMessage() {
+      const message = simCounselorInput.value.trim();
+      if (!message) {
+        simStatusText.textContent = "请输入谈话内容";
+        return;
+      }
+      if (!simState.dialogue_history || simState.dialogue_history.length === 0) {
+        simStatusText.textContent = "请先开始模拟";
+        return;
+      }
+
+      simSendBtn.disabled = true;
+      simStatusText.textContent = "虚拟学生流式回应中...";
+      const tempHistory = [...simState.dialogue_history, { role: "counselor", content: message }, { role: "student", content: "" }];
+      simState.dialogue_history = tempHistory;
+      simCounselorInput.value = "";
+      renderSimulationChat();
+      let replyText = "";
+
+      try {
+        await streamPost('/simulation/reply_stream', {
+          student_type: simState.student_type,
+          topic: simState.topic,
+          difficulty: simState.difficulty,
+          student_profile: simState.student_profile,
+          dialogue_history: tempHistory.slice(0, -2),
+          counselor_message: message,
+          category: simCategoryInput.value || null,
+          model_choice: simModelSelect.value
+        }, {
+          onToken: (token) => { replyText += token; simState.dialogue_history[simState.dialogue_history.length - 1].content = replyText; renderSimulationChat(); },
+          onSources: (names) => renderSourceNames(simSourcesBox, names, "No DB hits."),
+          onDone: (payload) => { simState.dialogue_history = payload.dialogue_history || simState.dialogue_history; renderSimulationChat(); simStatusText.textContent = "继续谈话或结束评分"; }
+        });
+      } catch (err) {
+        simStatusText.textContent = "Failed.";
+        alert(`模拟回应失败：${err.message}`);
+      } finally {
+        simSendBtn.disabled = false;
+      }
+    }
+
+    async function evaluateSimulation() {
+      if (!simState.dialogue_history || simState.dialogue_history.length < 2) {
+        simStatusText.textContent = "对话轮次太少，无法评分";
+        return;
+      }
+
+      simEvaluateBtn.disabled = true;
+      simStatusText.textContent = "Streaming...";
+      simEvaluationBox.innerHTML = '<p class="text-purple-300 italic">正在流式生成训练评分与改进建议...</p>';
+      let fullText = "";
+
+      try {
+        await streamPost('/simulation/evaluate_stream', {
+          student_type: simState.student_type,
+          topic: simState.topic,
+          difficulty: simState.difficulty,
+          student_profile: simState.student_profile,
+          dialogue_history: simState.dialogue_history,
+          category: simCategoryInput.value || null,
+          model_choice: simModelSelect.value
+        }, {
+          onToken: (token) => { fullText += token; appendStreamingMarkdown(simEvaluationBox, fullText); },
+          onSources: (names) => renderSourceNames(simSourcesBox, names, "No DB hits."),
+          onDone: () => { simStatusText.textContent = "训练评分完成"; }
+        });
+      } catch (err) {
+        simEvaluationBox.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        simStatusText.textContent = "Failed.";
+      } finally {
+        simEvaluateBtn.disabled = false;
+      }
+    }
+
+    function resetSimulation() {
+      simState = { student_type: "", topic: "", difficulty: "medium", student_profile: "", dialogue_history: [] };
+      if (simCounselorInput) simCounselorInput.value = "";
+      if (simProfileInput) simProfileInput.value = "";
+      if (simChatBox) simChatBox.innerHTML = '<div class="text-cyan-800 italic">请选择学生类型并开始模拟。</div>';
+      if (simEvaluationBox) simEvaluationBox.innerHTML = '<p class="text-cyan-800 italic">结束训练后自动生成评分。</p>';
+      if (simSourcesBox) simSourcesBox.innerHTML = '<div class="text-sm text-cyan-900 font-mono">No data.</div>';
+      if (simStatusText) simStatusText.textContent = "Standby.";
+    }
+
+    simStartBtn?.addEventListener("click", startSimulation);
+    simSendBtn?.addEventListener("click", sendSimulationMessage);
+    simEvaluateBtn?.addEventListener("click", evaluateSimulation);
+    simResetBtn?.addEventListener("click", resetSimulation);
+    simCounselorInput?.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        sendSimulationMessage();
+      }
+    });
+
+
+    const caseGenerateBtn = document.getElementById("caseGenerateBtn");
+    const caseGraphBtn = document.getElementById("caseGraphBtn");
+    const caseConsensusBtn = document.getElementById("caseConsensusBtn");
+    const caseCopyBtn = document.getElementById("caseCopyBtn");
+    const caseExportMdBtn = document.getElementById("caseExportMdBtn");
+    const caseContent = document.getElementById("caseContent");
+    const caseSourcesBox = document.getElementById("caseSourcesBox");
+    const caseStatusText = document.getElementById("caseStatusText");
+
+    function getCasePayload() {
+      return {
+        case_title: document.getElementById("caseTitleInput").value.trim(),
+        student_info: document.getElementById("caseStudentInfoInput").value.trim() || null,
+        main_issues: document.getElementById("caseMainIssuesInput").value.trim(),
+        background: document.getElementById("caseBackgroundInput").value.trim() || null,
+        current_measures: document.getElementById("caseMeasuresInput").value.trim() || null,
+        consultation_focus: document.getElementById("caseFocusInput").value.trim() || null,
+        urgency: document.getElementById("caseUrgencyInput").value,
+        extra_requirements: document.getElementById("caseExtraInput").value.trim() || null,
+        category: document.getElementById("caseCategoryInput").value || null,
+        model_choice: document.getElementById("caseModelSelect").value
+      };
+    }
+
+    const CASE_ROLES = [
+      ["counselor", "辅导员视角"],
+      ["head_teacher", "班主任视角"],
+      ["psychology", "心理中心视角"],
+      ["financial_aid", "资助专员视角"],
+      ["career", "就业指导老师视角"],
+      ["deputy_secretary", "学院副书记视角"],
+      ["policy", "政策合规视角"]
+    ];
+
+    async function generateCaseConsultation() {
+      const basePayload = getCasePayload();
+
+      if (!basePayload.case_title) {
+        caseStatusText.textContent = "请填写个案标题";
+        return;
+      }
+      if (!basePayload.main_issues) {
+        caseStatusText.textContent = "请填写核心问题";
+        return;
+      }
+
+      caseGenerateBtn.disabled = true;
+      caseStatusText.textContent = "分角色会商启动...";
+      caseSourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Loading case references...</div>';
+
+      let fullText = "# 多角色协同个案会商\n\n";
+      fullText += "> 本次会商采用“分角色逐步生成 + 最终汇总报告”模式，降低长文本卡顿风险。\n\n";
+      appendStreamingMarkdown(caseContent, fullText);
+
+      const roleOpinions = [];
+      const allSourceNames = new Set();
+
+      try {
+        for (let i = 0; i < CASE_ROLES.length; i++) {
+          const [roleKey, roleName] = CASE_ROLES[i];
+          caseStatusText.textContent = `正在生成：${roleName}（${i + 1}/${CASE_ROLES.length}）...`;
+
+          let roleText = "";
+          fullText += `\n\n---\n\n# ${i + 1}. ${roleName}\n\n`;
+          appendStreamingMarkdown(caseContent, fullText);
+
+          await streamPost('/case_consultation_role_stream', {
+            ...basePayload,
+            role_key: roleKey,
+            role_name: roleName
+          }, {
+            onToken: (token) => {
+              roleText += token;
+              appendStreamingMarkdown(caseContent, fullText + roleText);
+            },
+            onSources: (names) => {
+              (names || []).forEach(n => allSourceNames.add(n));
+              renderSourceNames(caseSourcesBox, Array.from(allSourceNames), "No DB hits.");
+            },
+            onDone: () => {}
+          });
+
+          fullText += roleText;
+          roleOpinions.push({ role_key: roleKey, role_name: roleName, content: roleText });
+          appendStreamingMarkdown(caseContent, fullText);
+        }
+
+        caseStatusText.textContent = "正在生成最终汇总报告...";
+        fullText += "\n\n---\n\n# 最终汇总报告\n\n";
+        appendStreamingMarkdown(caseContent, fullText);
+
+        let finalText = "";
+        await streamPost('/case_consultation_final_stream', {
+          ...basePayload,
+          role_opinions: roleOpinions
+        }, {
+          onToken: (token) => {
+            finalText += token;
+            appendStreamingMarkdown(caseContent, fullText + finalText);
+          },
+          onSources: (names) => {
+            (names || []).forEach(n => allSourceNames.add(n));
+            renderSourceNames(caseSourcesBox, Array.from(allSourceNames), "No DB hits.");
+          },
+          onDone: () => {
+            caseStatusText.textContent = "分角色会商完成";
+          }
+        });
+
+        fullText += finalText;
+        appendStreamingMarkdown(caseContent, fullText);
+        await typesetMath();
+
+      } catch (err) {
+        caseContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        caseSourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Trace failed.</div>';
+        caseStatusText.textContent = "Failed.";
+      } finally {
+        caseGenerateBtn.disabled = false;
+      }
+    }
+
+    caseGenerateBtn?.addEventListener("click", generateCaseConsultation);
+
+    async function generateCaseConsultationGraph() {
+      const basePayload = getCasePayload();
+
+      if (!basePayload.case_title) {
+        caseStatusText.textContent = "请填写个案标题";
+        return;
+      }
+      if (!basePayload.main_issues) {
+        caseStatusText.textContent = "请填写核心问题";
+        return;
+      }
+
+      caseGraphBtn.disabled = true;
+      caseGenerateBtn.disabled = true;
+      caseStatusText.textContent = "LangGraph 会商启动...";
+      caseSourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">LangGraph retrieving...</div>';
+
+      let fullText = "# LangGraph 多角色协同个案会商\n\n";
+      fullText += "> 由后端 LangGraph 工作流统一调度：检索资料 → 风险初筛 → 多角色节点 → 最终汇总。\n\n";
+      appendStreamingMarkdown(caseContent, fullText);
+
+      try {
+        await streamPost('/case_consultation_graph_stream', basePayload, {
+          onToken: (token) => {
+            fullText += token;
+            appendStreamingMarkdown(caseContent, fullText);
+          },
+          onStage: (stage) => {
+            caseStatusText.textContent = `LangGraph：${stage}`;
+          },
+          onSources: (names) => renderSourceNames(caseSourcesBox, names, "No DB hits."),
+          onDone: () => { caseStatusText.textContent = "LangGraph 会商完成"; }
+        });
+        await typesetMath();
+      } catch (err) {
+        caseContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        caseSourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">LangGraph failed.</div>';
+        caseStatusText.textContent = "Failed.";
+      } finally {
+        caseGraphBtn.disabled = false;
+        caseGenerateBtn.disabled = false;
+      }
+    }
+
+    caseGraphBtn?.addEventListener("click", generateCaseConsultationGraph);
+
+
+    async function generateConsensusCaseConsultation() {
+      const basePayload = getCasePayload();
+
+      if (!basePayload.case_title) {
+        caseStatusText.textContent = "请填写个案标题";
+        return;
+      }
+      if (!basePayload.main_issues) {
+        caseStatusText.textContent = "请填写核心问题";
+        return;
+      }
+
+      caseConsensusBtn.disabled = true;
+      caseGenerateBtn.disabled = true;
+      if (caseGraphBtn) caseGraphBtn.disabled = true;
+
+      caseStatusText.textContent = "协商式会商启动...";
+      caseSourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Consensus graph retrieving...</div>';
+
+      let fullText = "# 多智能体协商式个案会商\n\n";
+      fullText += "> 机制：角色初评 → 交叉质询 → 风险反驳 → 方案修正 → 共识形成 → 保留分歧 → 最终建议。\n\n";
+      appendStreamingMarkdown(caseContent, fullText);
+
+      try {
+        await streamPost('/consensus_case_graph_stream', basePayload, {
+          onToken: (token) => {
+            fullText += token;
+            appendStreamingMarkdown(caseContent, fullText);
+          },
+          onStage: (stage) => {
+            caseStatusText.textContent = `协商式会商：${stage}`;
+          },
+          onSources: (names) => renderSourceNames(caseSourcesBox, names, "No DB hits."),
+          onDone: () => {
+            caseStatusText.textContent = "协商式会商完成";
+          }
+        });
+        await typesetMath();
+      } catch (err) {
+        caseContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        caseSourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Consensus graph failed.</div>';
+        caseStatusText.textContent = "Failed.";
+      } finally {
+        caseConsensusBtn.disabled = false;
+        caseGenerateBtn.disabled = false;
+        if (caseGraphBtn) caseGraphBtn.disabled = false;
+      }
+    }
+
+    caseConsensusBtn?.addEventListener("click", generateConsensusCaseConsultation);
+
+    caseCopyBtn?.addEventListener("click", async () => {
+      const text = caseContent.textContent.trim();
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        caseStatusText.textContent = "Copied.";
+      } catch {
+        caseStatusText.textContent = "Copy Failed.";
+      }
+    });
+    caseExportMdBtn?.addEventListener("click", () => postFormDownload(`${API_BASE}/export/notice/markdown`, {
+      title: document.getElementById("caseTitleInput").value.trim() || "个案会商报告",
+      body: caseContent.textContent.trim()
+    }));
+
+
+    const sandboxGenerateBtn = document.getElementById("sandboxGenerateBtn");
+    const sandboxContent = document.getElementById("sandboxContent");
+    const sandboxSourcesBox = document.getElementById("sandboxSourcesBox");
+    const sandboxStatusText = document.getElementById("sandboxStatusText");
+
+    function getSandboxPayload() {
+      return {
+        case_title: document.getElementById("sandboxTitleInput").value.trim(),
+        student_info: document.getElementById("sandboxStudentInfoInput").value.trim() || null,
+        main_issues: document.getElementById("sandboxMainIssuesInput").value.trim(),
+        background: document.getElementById("sandboxBackgroundInput").value.trim() || null,
+        current_state: document.getElementById("sandboxCurrentStateInput").value.trim() || null,
+        current_measures: document.getElementById("sandboxMeasuresInput").value.trim() || null,
+        scenario_a: document.getElementById("sandboxScenarioAInput").value.trim() || null,
+        scenario_b: document.getElementById("sandboxScenarioBInput").value.trim() || null,
+        scenario_c: document.getElementById("sandboxScenarioCInput").value.trim() || null,
+        period: document.getElementById("sandboxPeriodInput").value,
+        focus: document.getElementById("sandboxFocusInput").value.trim() || null,
+        category: document.getElementById("sandboxCategoryInput").value || null,
+        model_choice: document.getElementById("sandboxModelSelect").value
+      };
+    }
+
+    async function generateCaseSandbox() {
+      const payload = getSandboxPayload();
+
+      if (!payload.case_title) {
+        sandboxStatusText.textContent = "请填写个案标题";
+        return;
+      }
+      if (!payload.main_issues) {
+        sandboxStatusText.textContent = "请填写核心问题";
+        return;
+      }
+
+      sandboxGenerateBtn.disabled = true;
+      sandboxStatusText.textContent = "沙盘推演启动...";
+      sandboxSourcesBox.innerHTML = '<div class="text-sm text-cyan-800 font-mono">Sandbox retrieving...</div>';
+
+      let fullText = "# 学生个案沙盘推演 Agent\n\n";
+      fullText += "> LangGraph 工作流：检索资料 → 风险基线 → 三条处置路径推演 → 压力测试 → 最终决策报告。\n\n";
+      appendStreamingMarkdown(sandboxContent, fullText);
+
+      try {
+        await streamPost('/case_sandbox_graph_stream', payload, {
+          onToken: (token) => {
+            fullText += token;
+            appendStreamingMarkdown(sandboxContent, fullText);
+          },
+          onStage: (stage) => {
+            sandboxStatusText.textContent = `沙盘推演：${stage}`;
+          },
+          onSources: (names) => renderSourceNames(sandboxSourcesBox, names, "No DB hits."),
+          onDone: () => {
+            sandboxStatusText.textContent = "沙盘推演完成";
+          }
+        });
+        await typesetMath();
+      } catch (err) {
+        sandboxContent.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        sandboxSourcesBox.innerHTML = '<div class="text-sm text-red-500 font-mono">Sandbox failed.</div>';
+        sandboxStatusText.textContent = "Failed.";
+      } finally {
+        sandboxGenerateBtn.disabled = false;
+      }
+    }
+
+    sandboxGenerateBtn?.addEventListener("click", generateCaseSandbox);
+
+
+    let excelAgentState = {
+      session_id: "",
+      active_sheet: "",
+      sheets: [],
+      profile: null
+    };
+
+    const excelAgentFileInput = document.getElementById("excelAgentFileInput");
+    const excelAgentUploadBtn = document.getElementById("excelAgentUploadBtn");
+    const excelAgentSheetSelect = document.getElementById("excelAgentSheetSelect");
+    const excelAgentProfileBtn = document.getElementById("excelAgentProfileBtn");
+    const excelAgentAnalyzeBtn = document.getElementById("excelAgentAnalyzeBtn");
+    const excelAgentPythonBtn = document.getElementById("excelAgentPythonBtn");
+    const excelAgentFollowupBtn = document.getElementById("excelAgentFollowupBtn");
+    const excelAgentGradeBtn = document.getElementById("excelAgentGradeBtn");
+    const excelAgentQuestionInput = document.getElementById("excelAgentQuestionInput");
+    const excelAgentExcludeInput = document.getElementById("excelAgentExcludeInput");
+    const excelAgentSessionBox = document.getElementById("excelAgentSessionBox");
+    const excelAgentProfileBox = document.getElementById("excelAgentProfileBox");
+    const excelAgentPreviewBox = document.getElementById("excelAgentPreviewBox");
+    const excelAgentReportBox = document.getElementById("excelAgentReportBox");
+    const excelAgentPlanBox = document.getElementById("excelAgentPlanBox");
+    const excelAgentStatusText = document.getElementById("excelAgentStatusText");
+    const excelExportMdBtn = document.getElementById("excelExportMdBtn");
+    const excelExportWordBtn = document.getElementById("excelExportWordBtn");
+    const excelExportPdfBtn = document.getElementById("excelExportPdfBtn");
+    const excelExportExcelBtn = document.getElementById("excelExportExcelBtn");
+
+
+    function getExcelExcludedCourseColumns() {
+      const raw = excelAgentExcludeInput?.value || "";
+      return raw
+        .split(/[,，\n]/)
+        .map(x => x.trim())
+        .filter(Boolean);
+    }
+
+    function renderExcelAgentSheets(sheets, activeSheet) {
+      if (!excelAgentSheetSelect) return;
+      excelAgentSheetSelect.innerHTML = "";
+      (sheets || []).forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.name;
+        opt.textContent = `${s.name} (${s.rows}×${s.columns})`;
+        if (s.name === activeSheet) opt.selected = true;
+        excelAgentSheetSelect.appendChild(opt);
+      });
+    }
+
+    function renderExcelAgentProfile(profile) {
+      if (!excelAgentProfileBox) return;
+      if (!profile) {
+        excelAgentProfileBox.innerHTML = '<div class="text-cyan-800 italic">暂无字段识别结果。</div>';
+        return;
+      }
+
+      const detected = profile.detected || {};
+      const shape = profile.shape || {};
+      const cols = profile.columns || [];
+      const scoreCols = detected.score_columns || [];
+      const courseScoreCols = detected.course_score_columns || [];
+      const excludedCols = detected.excluded_course_columns || [];
+
+      excelAgentProfileBox.innerHTML = `
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="rounded-lg border border-cyan-900/60 p-2">行数<br><b class="text-cyan-300">${shape.rows ?? "-"}</b></div>
+          <div class="rounded-lg border border-cyan-900/60 p-2">列数<br><b class="text-cyan-300">${shape.columns ?? "-"}</b></div>
+          <div class="rounded-lg border border-cyan-900/60 p-2">疑似成绩列<br><b class="text-cyan-300">${scoreCols.length}</b></div>
+          <div class="rounded-lg border border-cyan-900/60 p-2">课程列<br><b class="text-cyan-300">${courseScoreCols.length}</b></div>
+          <div class="rounded-lg border border-cyan-900/60 p-2">任务<br><b class="text-cyan-300">${(profile.detected_tasks || []).length}</b></div>
+        </div>
+        <div class="mt-3 text-xs leading-6">
+          <div>姓名列：<span class="text-cyan-300">${escapeHtml(detected.name_column || "未识别")}</span></div>
+          <div>学号列：<span class="text-cyan-300">${escapeHtml(detected.id_column || "未识别")}</span></div>
+          <div>班级列：<span class="text-cyan-300">${escapeHtml(detected.class_column || "未识别")}</span></div>
+          <div>课程列：<span class="text-cyan-300">${escapeHtml(courseScoreCols.slice(0, 12).join("、") || "未识别")}</span></div>
+          <div>排除列：<span class="text-cyan-300">${escapeHtml(excludedCols.join("、") || "无")}</span></div>
+        </div>
+        <div class="mt-3 max-h-72 overflow-auto custom-scrollbar">
+          ${cols.map(c => `
+            <div class="flex justify-between gap-2 border-b border-cyan-900/40 py-1 text-xs">
+              <span class="truncate">${escapeHtml(c.name)}</span>
+              <span class="text-purple-300">${escapeHtml(c.type)}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderExcelAgentPreview(rows) {
+      if (!excelAgentPreviewBox) return;
+      if (!rows || !rows.length) {
+        excelAgentPreviewBox.innerHTML = '<div class="text-cyan-800 italic">暂无预览。</div>';
+        return;
+      }
+      const cols = Object.keys(rows[0] || {});
+      let html = '<table class="w-full border-collapse text-xs"><thead><tr>';
+      cols.forEach(c => html += `<th class="border border-cyan-900/60 px-2 py-1 text-cyan-400">${escapeHtml(c)}</th>`);
+      html += '</tr></thead><tbody>';
+      rows.forEach(r => {
+        html += '<tr>';
+        cols.forEach(c => html += `<td class="border border-cyan-900/40 px-2 py-1">${escapeHtml(String(r[c] ?? ""))}</td>`);
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      excelAgentPreviewBox.innerHTML = html;
+    }
+
+
+    function renderExcelAgentPlan(plan) {
+      if (!excelAgentPlanBox) return;
+      if (!plan) {
+        excelAgentPlanBox.innerHTML = '<div class="text-cyan-800 italic">暂无分析计划。</div>';
+        return;
+      }
+      const steps = plan.steps || [];
+      excelAgentPlanBox.innerHTML = `
+        <div class="rounded-lg border border-purple-900/60 p-2">
+          <div class="text-purple-300 font-bold">${escapeHtml(plan.analysis_goal || "Excel智能分析")}</div>
+          <div class="text-purple-200/80 mt-1">${escapeHtml(plan.reasoning || "")}</div>
+        </div>
+        <div class="space-y-2 mt-2">
+          ${steps.map((s, i) => `
+            <div class="rounded-lg border border-purple-900/40 p-2">
+              <div class="text-purple-300">Step ${i + 1}: ${escapeHtml(s.tool || "")}</div>
+              <pre class="text-[11px] text-purple-100/80 whitespace-pre-wrap">${escapeHtml(JSON.stringify(s.params || {}, null, 2))}</pre>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function exportExcelAgent(kind) {
+      if (!excelAgentState.session_id) {
+        excelAgentStatusText.textContent = "请先完成一次分析";
+        return;
+      }
+      window.open(`${API_BASE}/excel_agent/export/${kind}/${excelAgentState.session_id}`, "_blank");
+    }
+
+    async function uploadExcelAgentFile() {
+      const file = excelAgentFileInput?.files?.[0];
+      if (!file) {
+        excelAgentStatusText.textContent = "请选择 Excel 文件";
+        return;
+      }
+
+      excelAgentUploadBtn.disabled = true;
+      excelAgentStatusText.textContent = "Uploading...";
+      excelAgentReportBox.innerHTML = '<p class="text-cyan-500 italic">正在上传并解析 Excel...</p>';
+
+      try {
+        const form = new FormData();
+        form.append("file", file);
+
+        const resp = await fetch(`${API_BASE}/excel_agent/upload`, {
+          method: "POST",
+          body: form
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "上传失败");
+
+        excelAgentState = {
+          session_id: data.session_id,
+          active_sheet: data.active_sheet,
+          sheets: data.sheets || [],
+          profile: data.profile
+        };
+
+        excelAgentSessionBox.textContent = data.session_id;
+        renderExcelAgentSheets(data.sheets || [], data.active_sheet);
+        renderExcelAgentProfile(data.profile);
+        renderExcelAgentPreview(data.preview_rows || []);
+
+        excelAgentReportBox.innerHTML = '<p class="text-cyan-300">Excel 已解析完成。可以点击“智能分析”或“成绩预警专用分析”。</p>';
+        excelAgentStatusText.textContent = "Parsed.";
+      } catch (err) {
+        excelAgentReportBox.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        excelAgentStatusText.textContent = "Failed.";
+      } finally {
+        excelAgentUploadBtn.disabled = false;
+      }
+    }
+
+    async function profileExcelAgentSheet() {
+      if (!excelAgentState.session_id) {
+        excelAgentStatusText.textContent = "请先上传 Excel";
+        return;
+      }
+
+      const sheetName = excelAgentSheetSelect.value;
+      excelAgentStatusText.textContent = "Profiling...";
+
+      try {
+        const resp = await fetch(`${API_BASE}/excel_agent/profile`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            session_id: excelAgentState.session_id,
+            sheet_name: sheetName,
+            excluded_course_columns: getExcelExcludedCourseColumns()
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Sheet解析失败");
+
+        excelAgentState.active_sheet = data.sheet_name;
+        excelAgentState.profile = data.profile;
+        renderExcelAgentProfile(data.profile);
+        renderExcelAgentPreview(data.preview_rows || []);
+        excelAgentStatusText.textContent = "Profiled.";
+      } catch (err) {
+        excelAgentStatusText.textContent = "Failed.";
+        alert(`Sheet解析失败：${err.message}`);
+      }
+    }
+
+    async function analyzeExcelAgent(mode = "auto", followup = false) {
+      if (!excelAgentState.session_id) {
+        excelAgentStatusText.textContent = "请先上传 Excel";
+        return;
+      }
+
+      excelAgentAnalyzeBtn.disabled = true;
+      excelAgentGradeBtn.disabled = true;
+      if (excelAgentFollowupBtn) excelAgentFollowupBtn.disabled = true;
+      excelAgentStatusText.textContent = followup ? "Following up..." : "Agent planning...";
+      excelAgentReportBox.innerHTML = '<p class="text-purple-300 italic">Gemma4 正在生成分析计划，Python 工具将执行精确计算...</p>';
+      renderExcelAgentPlan(null);
+
+      try {
+        const endpoint = followup ? "/excel_agent/followup" : "/excel_agent/analyze";
+        const resp = await fetch(`${API_BASE}${endpoint}`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            session_id: excelAgentState.session_id,
+            sheet_name: excelAgentSheetSelect.value || excelAgentState.active_sheet,
+            question: excelAgentQuestionInput.value.trim() || "请对这个Excel进行智能分析",
+            mode,
+            excluded_course_columns: getExcelExcludedCourseColumns()
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "分析失败");
+
+        excelAgentState.profile = data.profile;
+        renderExcelAgentProfile(data.profile);
+        renderExcelAgentPlan(data.analysis_plan);
+        await typeMarkdown(excelAgentReportBox, data.report_markdown || "");
+
+        if (data.charts && data.charts.length) {
+          excelAgentReportBox.innerHTML += `<hr><p class="text-sm text-cyan-500">已生成图表文件：${data.charts.map(escapeHtml).join("；")}</p>`;
+        }
+
+        excelAgentStatusText.textContent = followup ? "Followup done." : "Agent done.";
+      } catch (err) {
+        excelAgentReportBox.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        excelAgentStatusText.textContent = "Failed.";
+      } finally {
+        excelAgentAnalyzeBtn.disabled = false;
+        excelAgentGradeBtn.disabled = false;
+        if (excelAgentFollowupBtn) excelAgentFollowupBtn.disabled = false;
+      }
+    }
+
+
+    async function analyzeExcelPythonAgent() {
+      if (!excelAgentState.session_id) {
+        excelAgentStatusText.textContent = "请先上传 Excel";
+        return;
+      }
+
+      excelAgentAnalyzeBtn.disabled = true;
+      if (excelAgentPythonBtn) excelAgentPythonBtn.disabled = true;
+      excelAgentGradeBtn.disabled = true;
+      if (excelAgentFollowupBtn) excelAgentFollowupBtn.disabled = true;
+
+      excelAgentStatusText.textContent = "Python Agent analyzing...";
+      excelAgentReportBox.innerHTML = '<p class="text-fuchsia-300 italic">Gemma4 正在生成 Python 分析代码，安全沙箱将执行计算...</p>';
+      renderExcelAgentPlan({
+        analysis_goal: "Python高级分析",
+        reasoning: "自然语言 → Gemma4生成Python → 安全沙箱执行 → Gemma4解释结果",
+        steps: [{tool: "python_agent_analyze", params: {safe_sandbox: true}}]
+      });
+
+      try {
+        const resp = await fetch(`${API_BASE}/excel_agent/python_agent_analyze`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            session_id: excelAgentState.session_id,
+            sheet_name: excelAgentSheetSelect.value || excelAgentState.active_sheet,
+            question: excelAgentQuestionInput.value.trim() || "请对这个Excel进行高级Python分析",
+            mode: "python_agent",
+            excluded_course_columns: getExcelExcludedCourseColumns()
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Python高级分析失败");
+
+        let codeBlock = "";
+        if (data.generated_code) {
+          codeBlock = `<details class="mb-4"><summary class="text-fuchsia-300 cursor-pointer">查看生成的 Python 代码</summary><pre class="text-xs whitespace-pre-wrap bg-black/40 border border-fuchsia-900/50 rounded-xl p-3 mt-2">${escapeHtml(data.generated_code)}</pre></details>`;
+        }
+
+        await typeMarkdown(excelAgentReportBox, data.report_markdown || "");
+        excelAgentReportBox.innerHTML = codeBlock + excelAgentReportBox.innerHTML;
+        excelAgentStatusText.textContent = data.ok ? "Python Agent done." : "Python Agent failed.";
+      } catch (err) {
+        excelAgentReportBox.innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
+        excelAgentStatusText.textContent = "Failed.";
+      } finally {
+        excelAgentAnalyzeBtn.disabled = false;
+        if (excelAgentPythonBtn) excelAgentPythonBtn.disabled = false;
+        excelAgentGradeBtn.disabled = false;
+        if (excelAgentFollowupBtn) excelAgentFollowupBtn.disabled = false;
+      }
+    }
+
+    excelAgentUploadBtn?.addEventListener("click", uploadExcelAgentFile);
+    excelAgentProfileBtn?.addEventListener("click", profileExcelAgentSheet);
+    excelAgentAnalyzeBtn?.addEventListener("click", () => analyzeExcelAgent("auto", false));
+    excelAgentPythonBtn?.addEventListener("click", analyzeExcelPythonAgent);
+    excelAgentFollowupBtn?.addEventListener("click", () => analyzeExcelAgent("auto", true));
+    excelAgentGradeBtn?.addEventListener("click", () => analyzeExcelAgent("grade_warning", false));
+    excelExportMdBtn?.addEventListener("click", () => exportExcelAgent("markdown"));
+    excelExportWordBtn?.addEventListener("click", () => exportExcelAgent("word"));
+    excelExportPdfBtn?.addEventListener("click", () => exportExcelAgent("pdf"));
+    excelExportExcelBtn?.addEventListener("click", () => exportExcelAgent("excel"));
+
+    document.getElementById("refreshQaHistoryBtn")?.addEventListener("click", () => loadHistory("qa", "qaHistoryBox"));
+
+    loadSystemStatus();
+    loadCategories();
+    loadHistory("qa", "qaHistoryBox");
+  </script>
+</body>
+</html>

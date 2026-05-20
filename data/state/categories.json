@@ -1,0 +1,50 @@
+[
+  {
+    "key": "discipline",
+    "label": "纪律处分"
+  },
+  {
+    "key": "insurance",
+    "label": "医保报销"
+  },
+  {
+    "key": "leave",
+    "label": "请假归寝"
+  },
+  {
+    "key": "scholarship",
+    "label": "奖助评优"
+  },
+  {
+    "key": "mental_health",
+    "label": "心理危机"
+  },
+  {
+    "key": "notice",
+    "label": "学院通知"
+  },
+  {
+    "key": "general",
+    "label": "通用资料"
+  },
+  {
+    "key": "rebuild",
+    "label": "重修"
+  },
+  {
+    "key": "academic",
+    "label": "学位"
+  },
+  {
+    "key": "postgraduate",
+    "label": "升学"
+  },
+  {
+    "key": "score",
+    "label": "成绩"
+  },
+  {
+    "key": "steelmaking",
+    "label": "钢铁冶金"
+  }
+]
